@@ -119,7 +119,7 @@ export default function ProviderInformation() {
           </div>
 
           <div className="providerActions">
-            <Button type="submit" icon={<ArrowRightIcon />}>
+            <Button type="submit" className="providerNext" icon={<ArrowRightIcon />}>
               Next
             </Button>
           </div>

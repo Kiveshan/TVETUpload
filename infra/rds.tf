@@ -23,7 +23,7 @@ resource "aws_db_instance" "this" {
 
   db_subnet_group_name   = aws_db_subnet_group.this.name
   vpc_security_group_ids = [aws_security_group.rds.id]
-  publicly_accessible    = false
+  publicly_accessible    = true
 
   # Single-AZ + short backup retention to keep this cheap by default.
   # Bump multi_az and backup_retention_period once this is carrying real data.

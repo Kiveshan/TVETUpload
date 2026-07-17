@@ -94,6 +94,12 @@ resource "aws_elastic_beanstalk_environment" "backend" {
 
   setting {
     namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "DB_SSL"
+    value     = "true"
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
     name      = "FRONTEND_ORIGINS"
     value     = "https://${aws_cloudfront_distribution.frontend.domain_name}"
   }

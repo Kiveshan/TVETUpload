@@ -2,7 +2,7 @@ import { type ReactNode, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Nav from '../../components/Nav/Nav';
 import Footer from '../../components/Footer/Footer';
-import { useAuth } from '../../auth/AuthContext';
+import { useAuth } from '../../auth/useAuth';
 import './PortalLayout.css';
 
 interface PortalLayoutProps {

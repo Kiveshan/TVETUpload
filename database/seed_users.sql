@@ -1,4 +1,4 @@
--- Seed: initial four provider users
+-- Seed: initial four provider users plus the system admin account
 -- Passwords are bcrypt-hashed (cost factor 12).
 -- Plaintext passwords are recorded separately in your password manager.
 
@@ -27,5 +27,11 @@ VALUES
     'Academia',
     'Academia',
     '$2b$12$5Z5bxhy0gZJPCXFPAbP1Ye5kvRByZVSm6zEseTlHA7cCwwyM7BWyi'
+  ),
+  (
+    'systemadmin@gmail.com',
+    'SystemAdmin',
+    'System Admin',
+    '$2b$12$HQRCnec2eTyKt2AnCqvgVeVa0dGtWuZCPa9vQL6D0L4ZMBFZ5c35y'
   )
 ON CONFLICT (email) DO NOTHING;

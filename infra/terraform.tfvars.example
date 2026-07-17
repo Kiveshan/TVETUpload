@@ -1,0 +1,11 @@
+# Copy to terraform.tfvars (gitignored) and fill in. Never commit real
+# secrets — for anything beyond local experimentation, set db_password via
+# TF_VAR_db_password in your shell or CI secrets instead of writing it here.
+
+aws_region   = "af-south-1"
+project_name = "tvetupload"
+environment  = "prod"
+github_repo  = "Kiveshan/TVETUpload"
+
+db_username = "tvetupload_app"
+db_password = "CHANGE_ME"

@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/Button/Button';
 import Nav from '../../components/Nav/Nav';
-import { useAuth } from '../../auth/AuthContext';
+import { useAuth } from '../../auth/useAuth';
 import { isSystemAdmin } from '../../auth/roles';
 import type { AuthUser } from '../../types';
 import { PATHS } from '../../routes/paths';

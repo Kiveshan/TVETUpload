@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PortalLayout from '../../layouts/PortalLayout/PortalLayout';
-import { useAuth } from '../../auth/AuthContext';
+import { useAuth } from '../../auth/useAuth';
 import { isSystemAdmin } from '../../auth/roles';
 import { PATHS } from '../../routes/paths';
 import ProviderRequestsView from './views/ProviderRequestsView';

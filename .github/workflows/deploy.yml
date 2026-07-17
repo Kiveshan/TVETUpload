@@ -2,9 +2,9 @@ name: CI/CD
 
 on:
   push:
-    branches: [main]
+    branches: [kiveshan-hosting]
   pull_request:
-    branches: [main]
+    branches: [kiveshan-hosting]
 
 permissions:
   contents: read

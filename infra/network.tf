@@ -57,6 +57,14 @@ resource "aws_security_group" "rds" {
     security_groups = [aws_security_group.eb_instances.id]
   }
 
+  ingress {
+    description = "Postgres from admin workstation (Kiveshan)"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = ["41.121.162.116/32"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0

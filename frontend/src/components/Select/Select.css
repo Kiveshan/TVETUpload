@@ -1,0 +1,42 @@
+.select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 220px;
+}
+
+.selectField {
+  width: 100%;
+  appearance: none;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0.65rem 2.25rem 0.65rem 1rem;
+  font-size: 0.9rem;
+  color: #0f172a;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.selectField:focus {
+  border-color: #0047a2;
+}
+
+.selectField:invalid {
+  color: #94a3b8;
+}
+
+.selectChevron {
+  position: absolute;
+  right: 0.75rem;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+@media (max-width: 600px) {
+  .select {
+    width: 100%;
+    min-width: 0;
+  }
+}

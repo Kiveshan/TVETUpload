@@ -5,12 +5,14 @@ import { AuthProvider } from './auth/AuthContext';
 import { PATHS } from './routes/paths';
 import Home from './pages/Home';
 import ProviderInformation from './pages/ProviderInformation';
+import SystemAdmin from './pages/SystemAdmin';
 
 function AppRoutes() {
   return (
     <Routes>
       <Route path={PATHS.home} element={<Home />} />
       <Route path={PATHS.providerInformation} element={<ProviderInformation />} />
+      <Route path={PATHS.systemAdmin} element={<SystemAdmin />} />
     </Routes>
   );
 }

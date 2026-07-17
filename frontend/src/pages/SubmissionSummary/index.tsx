@@ -30,7 +30,9 @@ function loadProvider(): ProviderForm {
   try {
     const raw = sessionStorage.getItem('tvet_provider_form');
     if (raw) return JSON.parse(raw);
-  } catch {}
+  } catch {
+    // ignore parse errors
+  }
   return { provider: '', fullName: '', email: '', contact: '' };
 }
 
@@ -38,7 +40,9 @@ function loadUploadState(): StoredUploadState {
   try {
     const raw = sessionStorage.getItem('tvet_college_upload');
     if (raw) return JSON.parse(raw);
-  } catch {}
+  } catch {
+    // ignore parse errors
+  }
   return { selectedCollege: '', selectedCollegeName: '', uploads: {} };
 }
 

@@ -19,7 +19,9 @@ function loadSaved() {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw) as { provider: string; fullName: string; email: string; contact: string };
-  } catch {}
+  } catch {
+    // ignore parse errors
+  }
   return { provider: '', fullName: '', email: '', contact: '' };
 }
 

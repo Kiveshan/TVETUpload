@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("../src/lib/prisma", () => ({
-  prisma: { $queryRaw: vi.fn() },
+vi.mock("../src/lib/db", () => ({
+  pool: { query: vi.fn() },
 }));
 
 describe("GET /health", () => {

@@ -1,0 +1,39 @@
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 3rem;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.navBrand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.navLogo {
+  height: 56px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.navBrandName {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.navActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+@media (max-width: 860px) {
+  .nav {
+    padding: 1rem 1.5rem;
+  }
+}

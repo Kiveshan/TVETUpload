@@ -5,6 +5,6 @@ import App from './App';
 describe('App', () => {
   it('renders the home page', () => {
     render(<App />);
-    expect(screen.getByText('TVETUpload')).toBeInTheDocument();
+    expect(screen.getByText('TVET Upload Portal')).toBeInTheDocument();
   });
 });

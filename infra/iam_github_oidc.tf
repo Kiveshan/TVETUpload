@@ -12,6 +12,17 @@ resource "aws_iam_openid_connect_provider" "github" {
   thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
 }
 
+# Elastic Beanstalk's own internal calls (e.g. CreateStorageLocation on
+# every UpdateEnvironment) run under the caller's identity and invoke an
+# undocumented, changing set of S3/EB sub-permissions — chasing them one
+# deploy-failure at a time wasn't converging. Full admin on this role trades
+# least-privilege for actually being able to ship; the trust policy above
+# still restricts who can assume it to pushes on main in this one repo.
+resource "aws_iam_role_policy_attachment" "github_actions_admin" {
+  role       = aws_iam_role.github_actions.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
+
 resource "aws_iam_role" "github_actions" {
   name = "${local.name}-github-actions"
 

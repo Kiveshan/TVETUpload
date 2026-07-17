@@ -27,7 +27,6 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
     next(new HttpError(401, "Not authenticated"));
     return;
   }
-
   try {
     const payload = jwt.verify(token, JWT_SECRET) as AuthUser;
     res.locals.user = payload;

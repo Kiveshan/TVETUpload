@@ -1,18 +1,22 @@
 import { useState } from 'react';
-import Button from '../../../components/Button/Button';
-import Nav from '../../../components/Nav/Nav';
-import { useAuth } from '../../../contexts/AuthContext';
-import type { AuthUser } from '../../../types';
+import { flushSync } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
+import Button from '../../components/Button/Button';
+import Nav from '../../components/Nav/Nav';
+import { useAuth } from '../../auth/AuthContext';
+import type { AuthUser } from '../../types';
+import { PATHS } from '../../routes/paths';
 import './Home.css';
 import SignInModal from '../Authentication/SignInModal';
 
 export default function Home() {
   const [signInOpen, setSignInOpen] = useState(false);
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   function handleLoginSuccess(user: AuthUser) {
-    login(user);
-    setSignInOpen(false);
+    flushSync(() => { login(user); });
+    navigate(PATHS.providerInformation);
   }
 
   return (
@@ -68,13 +72,7 @@ export default function Home() {
 function ArrowRightIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 12h14M13 6l6 6-6 6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

@@ -1,9 +1,9 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { pool } from "../lib/db";
-import { asyncHandler } from "../middleware/asyncHandler";
-import { HttpError } from "../lib/httpError";
+import { pool } from "../../lib/db";
+import { asyncHandler } from "../../middleware/asyncHandler";
+import { HttpError } from "../../lib/httpError";
 
 const router = Router();
 

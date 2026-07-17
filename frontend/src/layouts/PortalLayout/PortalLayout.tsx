@@ -1,8 +1,8 @@
 import { type ReactNode, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Nav from '../Nav/Nav';
-import Footer from '../Footer/Footer';
-import { useAuth } from '../../contexts/AuthContext';
+import Nav from '../../components/Nav/Nav';
+import Footer from '../../components/Footer/Footer';
+import { useAuth } from '../../auth/AuthContext';
 import './PortalLayout.css';
 
 interface PortalLayoutProps {
@@ -38,11 +38,7 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
           </div>
         }
       />
-
-      <main className="portalMain">
-        {children}
-      </main>
-
+      <main className="portalMain">{children}</main>
       <Footer />
     </div>
   );

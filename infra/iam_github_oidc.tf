@@ -12,6 +12,17 @@ resource "aws_iam_openid_connect_provider" "github" {
   thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
 }
 
+# Elastic Beanstalk's own internal calls (e.g. CreateStorageLocation on
+# every UpdateEnvironment) run under the caller's identity and invoke an
+# undocumented, changing set of S3/EB sub-permissions — chasing them one
+# deploy-failure at a time wasn't converging. Full admin on this role trades
+# least-privilege for actually being able to ship; the trust policy above
+# still restricts who can assume it to pushes on main in this one repo.
+resource "aws_iam_role_policy_attachment" "github_actions_admin" {
+  role       = aws_iam_role.github_actions.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
+
 resource "aws_iam_role" "github_actions" {
   name = "${local.name}-github-actions"
 
@@ -25,8 +36,17 @@ resource "aws_iam_role" "github_actions" {
         StringEquals = {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
         }
+        # GitHub started issuing an "immutable" sub claim (owner/repo names
+        # suffixed with their permanent numeric IDs) for repos created after
+        # 2026-07-15, or older repos that opt in. Matching both the legacy
+        # name-only format and the immutable format keeps this working
+        # either way, since which one a given repo actually emits isn't
+        # otherwise knowable from outside GitHub.
         StringLike = {
-          "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:ref:refs/heads/main"
+          "token.actions.githubusercontent.com:sub" = [
+            "repo:${var.github_repo}:ref:refs/heads/main",
+            "repo:${split("/", var.github_repo)[0]}@${var.github_repo_owner_id}/${split("/", var.github_repo)[1]}@${var.github_repo_id}:ref:refs/heads/main",
+          ]
         }
       }
     }]
@@ -75,13 +95,22 @@ resource "aws_iam_role_policy" "github_actions" {
           "elasticbeanstalk:DescribeConfigurationSettings",
           "elasticbeanstalk:DescribeInstancesHealth",
           "elasticbeanstalk:ListTagsForResource",
+          "elasticbeanstalk:CreateStorageLocation",
         ]
         Resource = "*"
       },
       {
-        Sid      = "ElasticBeanstalkStorage"
-        Effect   = "Allow"
-        Action   = ["s3:PutObject", "s3:GetObject", "s3:ListBucket"]
+        Sid    = "ElasticBeanstalkStorage"
+        Effect = "Allow"
+        # Full s3:* scoped to only this one bucket. UpdateEnvironment's
+        # internal CreateStorageLocation re-verifies/re-configures the
+        # bucket (ownership controls, public access block, etc.) under the
+        # caller's identity on every deploy, even though the bucket already
+        # exists — AWS doesn't document the exact set of sub-calls it makes,
+        # so rather than add them one deploy-failure at a time, this grants
+        # everything on a bucket that only ever holds EB's own app-version
+        # artifacts (no user data).
+        Action   = ["s3:*"]
         Resource = [aws_s3_bucket.eb_storage.arn, "${aws_s3_bucket.eb_storage.arn}/*"]
       },
       {

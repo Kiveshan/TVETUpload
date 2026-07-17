@@ -17,6 +17,7 @@ resource "aws_cloudfront_distribution" "frontend" {
   enabled             = true
   default_root_object = "index.html"
   comment             = "${local.name} frontend"
+  aliases             = [var.domain_name]
 
   origin {
     origin_id                = "s3-frontend"
@@ -71,7 +72,9 @@ resource "aws_cloudfront_distribution" "frontend" {
   price_class = "PriceClass_100"
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn      = data.aws_acm_certificate.site.arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
   restrictions {

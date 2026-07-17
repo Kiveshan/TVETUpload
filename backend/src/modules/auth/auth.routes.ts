@@ -4,15 +4,17 @@ import jwt from "jsonwebtoken";
 import { pool } from "../../lib/db";
 import { asyncHandler } from "../../middleware/asyncHandler";
 import { HttpError } from "../../lib/httpError";
+import { loginRateLimit } from "../../middleware/loginRateLimit";
+import { createSession, deleteSession, isSessionValid, SESSION_MAX_AGE_MS } from "./sessions";
 
 const router = Router();
 
 const JWT_SECRET = process.env.JWT_SECRET ?? "dev-secret-change-me";
 const COOKIE_NAME = "auth_token";
-const COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 router.post(
   "/login",
+  loginRateLimit,
   asyncHandler(async (req, res) => {
     const { email, password } = req.body as { email?: string; password?: string };
 
@@ -36,8 +38,11 @@ router.post(
       throw new HttpError(401, "Invalid email or password");
     }
 
+    const sessionId = await createSession(user.user_id);
+
     const token = jwt.sign(
       {
+        sessionId,
         userId: user.user_id,
         email: user.email,
         fullName: user.full_name,
@@ -52,7 +57,7 @@ router.post(
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
-        maxAge: COOKIE_MAX_AGE_MS,
+        maxAge: SESSION_MAX_AGE_MS,
       })
       .json({
         user: {
@@ -71,29 +76,49 @@ router.get(
     const token = (req.cookies as Record<string, string>)[COOKIE_NAME];
     if (!token) throw new HttpError(401, "Not authenticated");
 
+    let payload: {
+      sessionId: string;
+      userId: number;
+      email: string;
+      fullName: string;
+      providerName: string;
+    };
     try {
-      const payload = jwt.verify(token, JWT_SECRET) as {
-        userId: number;
-        email: string;
-        fullName: string;
-        providerName: string;
-      };
-      res.json({
-        user: {
-          userId: payload.userId,
-          email: payload.email,
-          fullName: payload.fullName,
-          providerName: payload.providerName,
-        },
-      });
+      payload = jwt.verify(token, JWT_SECRET) as typeof payload;
     } catch {
       throw new HttpError(401, "Invalid or expired session");
     }
+
+    if (!(await isSessionValid(payload.sessionId))) {
+      res.clearCookie(COOKIE_NAME);
+      throw new HttpError(401, "Invalid or expired session");
+    }
+
+    res.json({
+      user: {
+        userId: payload.userId,
+        email: payload.email,
+        fullName: payload.fullName,
+        providerName: payload.providerName,
+      },
+    });
   })
 );
 
-router.post("/logout", (_req, res) => {
-  res.clearCookie(COOKIE_NAME).json({ ok: true });
-});
+router.post(
+  "/logout",
+  asyncHandler(async (req, res) => {
+    const token = (req.cookies as Record<string, string>)[COOKIE_NAME];
+    if (token) {
+      try {
+        const { sessionId } = jwt.verify(token, JWT_SECRET) as { sessionId: string };
+        await deleteSession(sessionId);
+      } catch {
+        // Token already invalid/expired — nothing to revoke.
+      }
+    }
+    res.clearCookie(COOKIE_NAME).json({ ok: true });
+  })
+);
 
 export default router;

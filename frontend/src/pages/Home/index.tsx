@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Button from '../../components/Button/Button';
 import Nav from '../../components/Nav/Nav';
 import { useAuth } from '../../auth/useAuth';
+import { isSystemAdmin } from '../../auth/roles';
 import type { AuthUser } from '../../types';
 import { PATHS } from '../../routes/paths';
 import './Home.css';
@@ -16,7 +17,7 @@ export default function Home() {
 
   function handleLoginSuccess(user: AuthUser) {
     flushSync(() => { login(user); });
-    navigate(PATHS.providerInformation);
+    navigate(isSystemAdmin(user.email) ? PATHS.systemAdmin : PATHS.providerInformation);
   }
 
   return (

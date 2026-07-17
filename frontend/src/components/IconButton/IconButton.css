@@ -1,0 +1,41 @@
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.iconButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.iconButton-success {
+  color: #16a34a;
+}
+
+.iconButton-success:hover:not(:disabled) {
+  background: #dcfce7;
+}
+
+.iconButton-danger {
+  color: #dc2626;
+}
+
+.iconButton-danger:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.iconButton-neutral {
+  color: #475569;
+}
+
+.iconButton-neutral:hover:not(:disabled) {
+  background: #f1f5f9;
+}

@@ -1,0 +1,351 @@
+.summaryPage {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Header ── */
+.summaryHeader { margin-bottom: 0.25rem; }
+.summaryTitle    { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin: 0 0 0.3rem; }
+.summarySubtitle { font-size: 0.9rem; color: #64748b; margin: 0; }
+
+/* ── Info cards row ── */
+.summaryInfoRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.summaryInfoCard {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0px 1px 2px rgba(0,0,0,0.10), 0px 1px 3px rgba(0,0,0,0.10);
+  padding: 1.5rem 1.75rem;
+}
+
+.summaryInfoCardTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 1.1rem;
+}
+
+.summaryInfoTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+.summaryInfoTable th,
+.summaryInfoTable td {
+  padding: 0.45rem 0;
+  font-size: 0.82rem;
+  vertical-align: top;
+  border: none;
+  text-align: left;
+}
+.summaryInfoTable th {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  width: 45%;
+  padding-right: 1rem;
+}
+.summaryInfoTable td {
+  color: #1e293b;
+  font-weight: 500;
+}
+
+/* ── Documents table card ── */
+.summaryDocsCard {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0px 1px 2px rgba(0,0,0,0.10), 0px 1px 3px rgba(0,0,0,0.10);
+  padding: 1.25rem 2rem 1.5rem;
+}
+
+.tableWrapper {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.summaryDocsTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 1rem;
+  padding: 0;
+}
+
+.summaryDocsTable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.summaryDocsTable thead tr {
+  background: #F4F8FA;
+  height: 50px;
+}
+.summaryDocsTable th {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  padding: 0 1.75rem;
+  text-align: left;
+  border: none;
+}
+.summaryDocsTable td {
+  padding: 1.35rem 1.75rem;
+  font-size: 0.875rem;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.summaryDocsTable tbody tr:last-child td { border-bottom: none; }
+
+.docNameCell  { font-weight: 700; width: 28%; font-size: 0.9rem; }
+.fileNameCell { color: #4477bb; width: 44%; }
+.summaryDocsTable th:nth-child(1) { width: 28%; }
+.summaryDocsTable th:nth-child(2) { width: 44%; }
+.summaryDocsTable th:nth-child(3) { width: 16%; }
+.summaryDocsTable th:nth-child(4) { width: 12%; }
+
+/* Status badges */
+.docUploadedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #dcfce7;
+  color: #16a34a;
+  white-space: nowrap;
+}
+.docPendingBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+/* Action icon buttons */
+.actionsCell { display: flex; gap: 0.5rem; align-items: center; }
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.iconBtn:hover:not(:disabled) { background: #f1f5f9; }
+.iconBtn:disabled { opacity: 0.35; cursor: not-allowed; }
+.iconBtn--delete { color: #dc2626; }
+.iconBtn--delete:hover:not(:disabled) { background: #fee2e2; }
+
+/* ── Consent section ── */
+.consentSection {
+  background: #E8EFF5;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1.1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.consentWarning {
+  font-size: 0.82rem;
+  color: #475569;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.consentLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  user-select: none;
+}
+
+.consentCheckbox {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  accent-color: #0047a2;
+  cursor: pointer;
+}
+
+/* ── Bottom actions ── */
+.summaryActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+}
+
+.summaryBackBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 161px;
+  height: 53px;
+  padding: 0 12px;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 500;
+  color: #484e64;
+  background: #fff;
+  border: 1px solid #7aa0ce;
+  border-radius: 8px;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition: background 0.15s;
+}
+.summaryBackBtn:hover { background: #f0f6ff; }
+
+.confirmBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 180px;
+  height: 53px;
+  padding: 0 16px;
+  background: #b8cce8;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: not-allowed;
+  box-sizing: border-box;
+  transition: background 0.15s;
+}
+.confirmBtn--active {
+  background: #0047a2;
+  cursor: pointer;
+}
+.confirmBtn--active:hover { background: #003a84; }
+
+/* ── Success modal ── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalCard {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2.5rem 2.25rem 2rem;
+  width: 460px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+}
+
+.modalIconCircle {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #dcfce7;
+  border: 4px solid #bbf7d0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.modalTitle {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.5rem;
+}
+
+.modalSubtitle {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.modalSummaryBox {
+  width: 100%;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+/* Provider Name + Selected College side by side */
+.modalSummaryTopRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.modalSummaryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.modalSummaryLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+
+.modalSummaryValue {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.modalRedirectNote {
+  margin-top: 1.1rem;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .summaryInfoRow { grid-template-columns: 1fr; }
+  .fileNameCell { max-width: 120px; }
+}

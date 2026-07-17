@@ -155,12 +155,23 @@
   margin-top: 2rem;
 }
 
-/* Softer, more rounded Next button to match the design (overrides .button) */
+/* Next button — disabled (default) is muted, enabled gets full blue */
 .providerActions .providerNext {
-  background: #8ba6d6;
+  background: #b8cce8;
   border-radius: 14px;
   padding: 1rem 2.25rem;
   font-size: 1.05rem;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+.providerActions .providerNext.providerNext--active {
+  background: #0047a2;
+  cursor: pointer;
+}
+
+.providerActions .providerNext.providerNext--active:hover {
+  background: #003a84;
 }
 
 @media (max-width: 700px) {

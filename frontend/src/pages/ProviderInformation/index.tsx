@@ -1,6 +1,8 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PortalLayout from '../../layouts/PortalLayout/PortalLayout';
 import Button from '../../components/Button/Button';
+import { PATHS } from '../../routes/paths';
 import './ProviderInformation.css';
 
 const PROVIDERS = ['Coltech', 'ITS', 'Academia', 'Thusanang'] as const;
@@ -11,20 +13,44 @@ const STEPS = [
   { number: 'Step 3', title: 'Summary & Confirmation' },
 ];
 
-export default function ProviderInformation() {
-  const [provider, setProvider] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [contact, setContact] = useState('');
+const STORAGE_KEY = 'tvet_provider_form';
 
-  const providerId = useId();
-  const fullNameId = useId();
-  const emailId = useId();
-  const contactId = useId();
+function loadSaved() {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as { provider: string; fullName: string; email: string; contact: string };
+  } catch {}
+  return { provider: '', fullName: '', email: '', contact: '' };
+}
+
+export default function ProviderInformation() {
+  const navigate = useNavigate();
+  const saved = loadSaved();
+
+  const [provider, setProvider] = useState(saved.provider);
+  const [fullName, setFullName] = useState(saved.fullName);
+  const [email, setEmail]       = useState(saved.email);
+  const [contact, setContact]   = useState(saved.contact);
+
+  const providerId  = useId();
+  const fullNameId  = useId();
+  const emailId     = useId();
+  const contactId   = useId();
+
+  // Persist form to sessionStorage so Back navigation restores it
+  useEffect(() => {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ provider, fullName, email, contact }));
+  }, [provider, fullName, email, contact]);
+
+  const isComplete =
+    provider.trim() !== '' &&
+    fullName.trim() !== '' &&
+    email.trim() !== '' &&
+    contact.trim() !== '';
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Proceed to the next step (College Upload).
+    if (isComplete) navigate(PATHS.collegeUpload);
   }
 
   return (
@@ -61,13 +87,9 @@ export default function ProviderInformation() {
                 onChange={(e) => setProvider(e.target.value)}
                 required
               >
-                <option value="" disabled>
-                  Select provider
-                </option>
+                <option value="" disabled>Select provider</option>
                 {PROVIDERS.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
+                  <option key={name} value={name}>{name}</option>
                 ))}
               </select>
             </div>
@@ -119,7 +141,12 @@ export default function ProviderInformation() {
           </div>
 
           <div className="providerActions">
-            <Button type="submit" className="providerNext" icon={<ArrowRightIcon />}>
+            <Button
+              type="submit"
+              className={`providerNext${isComplete ? ' providerNext--active' : ''}`}
+              icon={<ArrowRightIcon />}
+              disabled={!isComplete}
+            >
               Next
             </Button>
           </div>

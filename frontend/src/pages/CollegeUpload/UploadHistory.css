@@ -1,0 +1,163 @@
+/* ── Documents card ── */
+.documentsCard {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0px 1px 2px rgba(0,0,0,0.10), 0px 1px 3px rgba(0,0,0,0.10);
+  padding: 1.25rem 2rem 1.5rem;
+}
+
+.documentsCard h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 1rem;
+}
+
+.tableWrapper {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.docsTable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.docsTable th:nth-child(1) { width: 28%; }
+.docsTable th:nth-child(2) { width: 44%; }
+.docsTable th:nth-child(3) { width: 16%; }
+.docsTable th:nth-child(4) { width: 12%; }
+
+.docsTable thead tr {
+  background: #F4F8FA;
+  height: 50px;
+}
+
+.docsTable th {
+  padding: 0 1.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  text-align: left;
+  border: none;
+}
+
+.docsTable td {
+  padding: 1.1rem 1.75rem;
+  font-size: 0.875rem;
+  color: #374151;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.docsTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.docName {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.fileName {
+  color: #0047a2;
+  font-size: 0.82rem;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.statusBadge--uploaded {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.actionsCell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.iconBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.iconBtn:hover {
+  color: #0047a2;
+}
+
+.iconBtn--reupload {
+  color: #dc2626;
+}
+
+.iconBtn--reupload:hover {
+  color: #b91c1c;
+}
+
+/* ── Re-upload tooltip — fixed position so it escapes any overflow ── */
+.reuploadTooltip {
+  position: fixed;
+  z-index: 1000;
+  background: #fff;
+  border: 1.5px solid #fca5a5;
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  width: 230px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+}
+
+.reuploadTooltip h4 {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.4rem;
+}
+
+.reuploadTooltip p {
+  font-size: 0.8rem;
+  color: #475569;
+  margin: 0 0 0.75rem;
+  line-height: 1.4;
+}
+
+.sendRequestBtn {
+  width: 100%;
+  padding: 0.45rem 0;
+  background: #0047a2;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sendRequestBtn:hover {
+  background: #003080;
+}

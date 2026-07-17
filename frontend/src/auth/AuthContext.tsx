@@ -12,6 +12,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function logout() {
     await api.post('/auth/logout').catch(() => undefined);
+    sessionStorage.removeItem('tvet_provider_form');
+    sessionStorage.removeItem('tvet_college_upload');
     setUser(null);
   }
 

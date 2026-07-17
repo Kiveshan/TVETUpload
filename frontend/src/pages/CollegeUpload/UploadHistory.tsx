@@ -21,7 +21,7 @@ function EyeIcon() {
 
 function ReuploadIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M23 4v6h-6" />
       <path d="M1 20v-6h6" />
       <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
@@ -33,6 +33,7 @@ interface TooltipPos {
   doc: string;
   top: number;
   left: number;
+  alignRight: boolean;
 }
 
 export default function UploadHistory() {
@@ -57,10 +58,15 @@ export default function UploadHistory() {
       return;
     }
     const rect = e.currentTarget.getBoundingClientRect();
+    // position: fixed uses viewport coords — no scroll offsets needed
+    const tooltipWidth = 230;
+    const spaceRight = window.innerWidth - rect.right;
+    const alignRight = spaceRight < tooltipWidth + 8;
     setTooltip({
       doc,
-      top: rect.bottom + window.scrollY + 8,
-      left: rect.right + window.scrollX - 230,
+      top: rect.bottom + 8,
+      left: alignRight ? rect.right - tooltipWidth : rect.left,
+      alignRight,
     });
   }
 
@@ -68,6 +74,7 @@ export default function UploadHistory() {
     <>
       <div className="documentsCard">
         <h2>Uploaded Documents</h2>
+        <div className="tableWrapper">
         <table className="docsTable">
           <thead>
             <tr>
@@ -104,6 +111,7 @@ export default function UploadHistory() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Tooltip rendered at fixed position — bypasses any overflow:hidden ancestors */}

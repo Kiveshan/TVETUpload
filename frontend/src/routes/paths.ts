@@ -3,4 +3,5 @@ export const PATHS = {
   providerInformation: '/provider-information',
   collegeUpload: '/college-upload',
   submissionSummary: '/submission-summary',
+  systemAdmin: '/system-admin',
 } as const;

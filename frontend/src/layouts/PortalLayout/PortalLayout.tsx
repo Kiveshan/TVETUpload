@@ -7,9 +7,10 @@ import './PortalLayout.css';
 
 interface PortalLayoutProps {
   children?: ReactNode;
+  mainClassName?: string;
 }
 
-export default function PortalLayout({ children }: PortalLayoutProps) {
+export default function PortalLayout({ children, mainClassName }: PortalLayoutProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -38,7 +39,7 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
           </div>
         }
       />
-      <main className="portalMain">{children}</main>
+      <main className={mainClassName ? `portalMain ${mainClassName}` : 'portalMain'}>{children}</main>
       <Footer />
     </div>
   );

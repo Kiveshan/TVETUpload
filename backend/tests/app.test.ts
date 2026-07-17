@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import app from "../src/app.js";
 
 vi.mock("../src/lib/db", () => ({
   pool: { query: vi.fn() },
@@ -6,7 +7,6 @@ vi.mock("../src/lib/db", () => ({
 
 describe("GET /health", () => {
   it("reports ok", async () => {
-    const app = (await import("../src/app")).default;
     const server = app.listen(0);
     const { port } = server.address() as { port: number };
 

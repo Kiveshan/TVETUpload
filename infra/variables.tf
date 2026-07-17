@@ -22,6 +22,24 @@ variable "github_repo" {
   default     = "Kiveshan/TVETUpload"
 }
 
+# GitHub's permanent numeric IDs for the owner/repo above — needed because
+# GitHub now issues an "immutable" OIDC sub claim (owner/repo names suffixed
+# with these IDs) for some repos, alongside or instead of the legacy
+# name-only claim. Find these with:
+#   curl -s https://api.github.com/repos/<owner>/<repo> | grep -E '"id"|"login"'
+# (the first "id" is the repo ID, the "id" under "owner" is the owner ID)
+variable "github_repo_owner_id" {
+  description = "Numeric GitHub user/org ID for the repo owner."
+  type        = string
+  default     = "102474568"
+}
+
+variable "github_repo_id" {
+  description = "Numeric GitHub repo ID."
+  type        = string
+  default     = "1302675582"
+}
+
 variable "instance_type" {
   description = "EC2 instance type for the Elastic Beanstalk backend."
   type        = string

@@ -25,8 +25,17 @@ resource "aws_iam_role" "github_actions" {
         StringEquals = {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
         }
+        # GitHub started issuing an "immutable" sub claim (owner/repo names
+        # suffixed with their permanent numeric IDs) for repos created after
+        # 2026-07-15, or older repos that opt in. Matching both the legacy
+        # name-only format and the immutable format keeps this working
+        # either way, since which one a given repo actually emits isn't
+        # otherwise knowable from outside GitHub.
         StringLike = {
-          "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:ref:refs/heads/main"
+          "token.actions.githubusercontent.com:sub" = [
+            "repo:${var.github_repo}:ref:refs/heads/main",
+            "repo:${split("/", var.github_repo)[0]}@${var.github_repo_owner_id}/${split("/", var.github_repo)[1]}@${var.github_repo_id}:ref:refs/heads/main",
+          ]
         }
       }
     }]

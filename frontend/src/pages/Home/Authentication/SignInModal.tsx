@@ -1,16 +1,38 @@
 import { useId, useState } from 'react';
 import Button from '../../../components/Button/Button';
 import Modal from '../../../components/Modal/Modal';
+import { api, ApiError } from '../../../lib/api';
+import type { AuthUser } from '../../../types';
 import './SignInModal.css';
 
 interface SignInModalProps {
   onClose: () => void;
+  onSuccess?: (user: AuthUser) => void;
 }
 
-export default function SignInModal({ onClose }: SignInModalProps) {
+export default function SignInModal({ onClose, onSuccess }: SignInModalProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const usernameId = useId();
   const passwordId = useId();
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const { user } = await api.post<{ user: AuthUser }>('/auth/login', { email, password });
+      onSuccess?.(user);
+      onClose();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <Modal onClose={onClose} labelledBy="sign-in-title">
@@ -23,21 +45,20 @@ export default function SignInModal({ onClose }: SignInModalProps) {
       </h2>
       <p className="modalSubtitle">Access the TVET Management Portal</p>
 
-      <form
-        className="modalForm"
-        onSubmit={(e) => {
-          e.preventDefault();
-        }}
-      >
+      <form className="modalForm" onSubmit={handleSubmit}>
         <label htmlFor={usernameId} className="modalLabel">
           Username
         </label>
         <input
           id={usernameId}
           type="email"
-          placeholder="you@dhet.gov.za"
+          placeholder="you@gmail.com"
           className="modalInput"
           autoComplete="username"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          disabled={loading}
         />
 
         <label htmlFor={passwordId} className="modalLabel">
@@ -50,6 +71,10 @@ export default function SignInModal({ onClose }: SignInModalProps) {
             placeholder="Enter your password"
             className="modalInput"
             autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            disabled={loading}
           />
           <button
             type="button"
@@ -61,8 +86,10 @@ export default function SignInModal({ onClose }: SignInModalProps) {
           </button>
         </div>
 
-        <Button type="submit" fullWidth className="modalSubmit">
-          Login
+        {error && <p className="modalError" role="alert">{error}</p>}
+
+        <Button type="submit" fullWidth className="modalSubmit" disabled={loading}>
+          {loading ? 'Signing in…' : 'Login'}
         </Button>
       </form>
     </Modal>

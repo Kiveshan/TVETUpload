@@ -17,7 +17,7 @@ export default function Nav({
   return (
     <header className="nav">
       <div className="navBrand">
-        <img src={logoSrc} alt={logoAlt} className="navLogo" />
+        {logoSrc && <img src={logoSrc} alt={logoAlt} className="navLogo" />}
         <span className="navBrandName">{brand}</span>
       </div>
 

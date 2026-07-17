@@ -1,11 +1,19 @@
 import { useState } from 'react';
 import Button from '../../../components/Button/Button';
 import Nav from '../../../components/Nav/Nav';
+import { useAuth } from '../../../contexts/AuthContext';
+import type { AuthUser } from '../../../types';
 import './Home.css';
 import SignInModal from '../Authentication/SignInModal';
 
 export default function Home() {
   const [signInOpen, setSignInOpen] = useState(false);
+  const { login } = useAuth();
+
+  function handleLoginSuccess(user: AuthUser) {
+    login(user);
+    setSignInOpen(false);
+  }
 
   return (
     <main className="home">
@@ -47,7 +55,12 @@ export default function Home() {
         </div>
       </section>
 
-      {signInOpen && <SignInModal onClose={() => setSignInOpen(false)} />}
+      {signInOpen && (
+        <SignInModal
+          onClose={() => setSignInOpen(false)}
+          onSuccess={handleLoginSuccess}
+        />
+      )}
     </main>
   );
 }

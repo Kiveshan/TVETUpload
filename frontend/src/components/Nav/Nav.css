@@ -4,7 +4,8 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem 3rem;
-  border-bottom: 1px solid #eef0f3;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .navBrand {
@@ -20,8 +21,8 @@
 }
 
 .navBrandName {
-  font-weight: 600;
-  font-size: 1.05rem;
+  font-weight: 700;
+  font-size: 1.1rem;
   color: #0f172a;
 }
 

@@ -4,6 +4,7 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import { pool } from "./lib/db";
 import { errorHandler } from "./middleware/errorHandler";
+import authRouter from "./routes/auth";
 
 const app = express();
 
@@ -45,6 +46,8 @@ api.get("/health/db", async (_req, res) => {
     res.status(503).json({ status: "error", database: "unreachable" });
   }
 });
+
+api.use("/auth", authRouter);
 
 app.use("/api", api);
 

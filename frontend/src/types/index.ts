@@ -1,6 +1,1 @@
-export interface AuthUser {
-  userId: number;
-  email: string;
-  fullName: string;
-  providerName: string;
-}
+export type { AuthUser } from './auth';

@@ -91,11 +91,15 @@ resource "aws_iam_role_policy" "github_actions" {
       {
         Sid    = "ElasticBeanstalkStorage"
         Effect = "Allow"
-        # s3:CreateBucket is required even though the bucket already exists:
-        # UpdateEnvironment re-verifies the storage location under the
-        # caller's identity, and IAM authorizes the action itself regardless
-        # of whether the bucket is already there.
-        Action   = ["s3:CreateBucket", "s3:PutObject", "s3:GetObject", "s3:ListBucket"]
+        # Full s3:* scoped to only this one bucket. UpdateEnvironment's
+        # internal CreateStorageLocation re-verifies/re-configures the
+        # bucket (ownership controls, public access block, etc.) under the
+        # caller's identity on every deploy, even though the bucket already
+        # exists — AWS doesn't document the exact set of sub-calls it makes,
+        # so rather than add them one deploy-failure at a time, this grants
+        # everything on a bucket that only ever holds EB's own app-version
+        # artifacts (no user data).
+        Action   = ["s3:*"]
         Resource = [aws_s3_bucket.eb_storage.arn, "${aws_s3_bucket.eb_storage.arn}/*"]
       },
       {

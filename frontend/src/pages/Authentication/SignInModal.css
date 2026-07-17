@@ -86,6 +86,16 @@
   color: #64748b;
 }
 
+.modalError {
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 6px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.875rem;
+}
+
 .modalSubmit {
   margin-top: 1.75rem;
   padding: 0.85rem 1rem;

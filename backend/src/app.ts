@@ -4,6 +4,7 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import { pool } from "./lib/db";
 import { errorHandler } from "./middleware/errorHandler";
+import authRouter from "./modules/auth/auth.routes";
 
 const app = express();
 
@@ -46,10 +47,10 @@ api.get("/health/db", async (_req, res) => {
   }
 });
 
+api.use("/auth", authRouter);
+
 app.use("/api", api);
 
-// Central error handler — must be registered last so it catches errors
-// forwarded by asyncHandler from any route above.
 app.use(errorHandler);
 
 export default app;

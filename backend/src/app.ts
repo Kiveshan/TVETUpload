@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import { pool } from "./lib/db";
 import { errorHandler } from "./middleware/errorHandler";
 import authRouter from "./modules/auth/auth.routes";
+import collegeRouter from "./modules/collegeUpload/index";
 
 const app = express();
 
@@ -48,6 +49,7 @@ api.get("/health/db", async (_req, res) => {
 });
 
 api.use("/auth", authRouter);
+api.use("/colleges", collegeRouter);
 
 app.use("/api", api);
 

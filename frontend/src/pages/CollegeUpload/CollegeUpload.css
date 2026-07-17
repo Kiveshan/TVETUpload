@@ -1,0 +1,229 @@
+/* ── Tab toggle row ── */
+.uploadTabRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.tabBtn {
+  padding: 0.55rem 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid #0047a2;
+  background: #fff;
+  color: #0047a2;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tabBtn:first-child {
+  border-radius: 7px 0 0 7px;
+}
+
+.tabBtn:nth-child(2) {
+  border-radius: 0 7px 7px 0;
+  border-left: none;
+}
+
+.tabBtn--active {
+  background: #0047a2;
+  color: #fff;
+}
+
+/* College dropdown shown inline in tab row for history tab */
+.historyCollegeInline {
+  appearance: none;
+  -webkit-appearance: none;
+  margin-left: auto;
+  min-width: 260px;
+  padding: 0.5rem 2.5rem 0.5rem 0.9rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 0.875rem;
+  color: #374151;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 0.75rem center;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.historyCollegeInline:focus {
+  outline: none;
+  border-color: #0047a2;
+}
+
+/* ── New Upload card ── */
+.uploadCard {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1.75rem 2rem;
+}
+
+.uploadCard h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.35rem;
+}
+
+.uploadCard p {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0 0 1.5rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.formLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.formLabel span {
+  color: #dc2626;
+  margin-left: 0.15rem;
+}
+
+.formSelect {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 55%;
+  min-width: 260px;
+  padding: 0.65rem 2.5rem 0.65rem 0.9rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 0.9rem;
+  color: #374151;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 0.75rem center;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.formSelect:focus {
+  outline: none;
+  border-color: #0047a2;
+}
+
+.formSelect:disabled {
+  background-color: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* ── Upload document cards grid ── */
+.uploadCardsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.docUploadCard {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.docCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.docCardTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.docCardTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.docCardSubtitle {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin-bottom: 0.75rem;
+}
+
+.pendingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #64748b;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dropZone {
+  border: 2px dashed #c7d2e0;
+  border-radius: 8px;
+  padding: 1.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  background: #f8fafc;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: center;
+}
+
+.dropZone:hover {
+  border-color: #0047a2;
+  background: #eff6ff;
+}
+
+.dropZoneText {
+  font-size: 0.82rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.dropZoneHint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.dropZoneInput {
+  display: none;
+}
+
+/* ── Back button ── */
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1.5rem;
+  padding: 0.55rem 1.25rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 7px;
+  background: #fff;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.backBtn:hover {
+  border-color: #0047a2;
+  color: #0047a2;
+}

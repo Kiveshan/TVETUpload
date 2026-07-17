@@ -14,12 +14,13 @@ interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'cla
 
 export default function Select({ options, placeholder, className, value, ...rest }: SelectProps) {
   const classes = ['select', className].filter(Boolean).join(' ');
+  const fieldClasses = ['selectField', !value && 'selectFieldPlaceholder'].filter(Boolean).join(' ');
 
   return (
     <div className={classes}>
-      <select className="selectField" value={value} {...rest}>
+      <select className={fieldClasses} value={value} {...rest}>
         {placeholder && (
-          <option value="" disabled>
+          <option value="" disabled hidden>
             {placeholder}
           </option>
         )}

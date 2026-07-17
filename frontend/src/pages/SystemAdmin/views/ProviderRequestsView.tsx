@@ -18,8 +18,10 @@ const STATUS_TABS: TabOption<RequestStatus>[] = [
   { value: 'rejected', label: 'Rejected' },
 ];
 
+const ALL_PROVIDERS = 'all';
+
 const PROVIDER_OPTIONS = [
-  { value: '', label: 'All service providers' },
+  { value: ALL_PROVIDERS, label: 'All service providers' },
   ...SERVICE_PROVIDERS.map((provider) => ({ value: provider, label: provider })),
 ];
 
@@ -37,7 +39,7 @@ export default function ProviderRequestsView() {
       requests.filter(
         (request) =>
           request.status === statusFilter &&
-          (providerFilter === '' || request.serviceProvider === providerFilter)
+          (providerFilter === '' || providerFilter === ALL_PROVIDERS || request.serviceProvider === providerFilter)
       ),
     [requests, statusFilter, providerFilter]
   );
@@ -69,6 +71,7 @@ export default function ProviderRequestsView() {
           <Tabs options={STATUS_TABS} value={statusFilter} onChange={handleStatusChange} />
           <Select
             options={PROVIDER_OPTIONS}
+            placeholder="Select a service provider"
             value={providerFilter}
             onChange={(e) => handleProviderChange(e.target.value)}
             aria-label="Filter by service provider"
@@ -104,20 +107,22 @@ export default function ProviderRequestsView() {
                     {request.fileName}
                   </td>
                   <td className="actionsCell">
-                    <IconButton
-                      variant="success"
-                      icon={<CheckIcon />}
-                      aria-label={`Approve ${request.document} from ${request.serviceProvider}`}
-                      disabled={request.status === 'approved'}
-                      onClick={() => updateStatus(request.id, 'approved')}
-                    />
-                    <IconButton
-                      variant="danger"
-                      icon={<CrossIcon />}
-                      aria-label={`Reject ${request.document} from ${request.serviceProvider}`}
-                      disabled={request.status === 'rejected'}
-                      onClick={() => updateStatus(request.id, 'rejected')}
-                    />
+                    {statusFilter === 'pending' && (
+                      <>
+                        <IconButton
+                          variant="success"
+                          icon={<CheckIcon />}
+                          aria-label={`Approve ${request.document} from ${request.serviceProvider}`}
+                          onClick={() => updateStatus(request.id, 'approved')}
+                        />
+                        <IconButton
+                          variant="danger"
+                          icon={<CrossIcon />}
+                          aria-label={`Reject ${request.document} from ${request.serviceProvider}`}
+                          onClick={() => updateStatus(request.id, 'rejected')}
+                        />
+                      </>
+                    )}
                     <IconButton
                       variant="neutral"
                       icon={<EyeIcon />}

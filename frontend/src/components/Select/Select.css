@@ -23,7 +23,7 @@
   border-color: #0047a2;
 }
 
-.selectField:invalid {
+.selectFieldPlaceholder {
   color: #94a3b8;
 }
 

@@ -58,6 +58,46 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return payload as T;
 }
 
+// XHR-based upload with progress reporting. fetch() has no upload progress
+// event, so large file submissions (multi-file, multi-MB) use this instead
+// of api.post to give the UI something to show besides a static spinner.
+function postWithProgress<T>(
+  path: string,
+  formData: FormData,
+  onProgress?: (fraction: number) => void,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${BASE_URL}${path}`, true);
+    xhr.withCredentials = true;
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total);
+    };
+
+    xhr.onload = () => {
+      const isJson = xhr.getResponseHeader('content-type')?.includes('application/json');
+      let payload: unknown;
+      try { payload = isJson ? JSON.parse(xhr.responseText) : undefined; } catch { payload = undefined; }
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(payload as T);
+        return;
+      }
+      const p = payload as Record<string, unknown> | undefined;
+      const message =
+        (p && typeof p === 'object' ? String(p['error'] ?? p['message'] ?? '') : '') ||
+        xhr.statusText ||
+        'Request failed';
+      reject(new ApiError(xhr.status, message, payload));
+    };
+
+    xhr.onerror = () => reject(new ApiError(0, 'Network error'));
+
+    xhr.send(formData);
+  });
+}
+
 export const api = {
   get: <T>(path: string, options?: RequestOptions) =>
     request<T>(path, { ...options, method: 'GET' }),
@@ -69,4 +109,5 @@ export const api = {
     request<T>(path, { ...options, method: 'PATCH', body }),
   delete: <T>(path: string, options?: RequestOptions) =>
     request<T>(path, { ...options, method: 'DELETE' }),
+  postUpload: postWithProgress,
 };

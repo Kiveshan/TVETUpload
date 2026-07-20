@@ -198,6 +198,31 @@
   cursor: pointer;
 }
 
+/* ── Upload progress ── */
+.uploadProgressWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0.75rem 0;
+}
+.uploadProgressTrack {
+  width: 100%;
+  height: 10px;
+  background: #e5edf9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.uploadProgressFill {
+  height: 100%;
+  background: #0047a2;
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+.uploadProgressLabel {
+  font-size: 0.8125rem;
+  color: #484e64;
+}
+
 /* ── Bottom actions ── */
 .summaryActions {
   display: flex;

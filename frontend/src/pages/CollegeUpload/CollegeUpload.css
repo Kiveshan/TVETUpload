@@ -1,29 +1,22 @@
 /* ── Tab toggle row ── */
 .uploadTabRow {
+  position: relative;
   display: flex;
   align-items: center;
   margin-bottom: 1.25rem;
+  min-height: 36px;
 }
 
-.tabBtn {
-  padding: 0.55rem 1.4rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1.5px solid #0047a2;
-  background: #fff;
-  color: #0047a2;
-  transition: background 0.15s, color 0.15s;
+/* Absolutely centered in the full row regardless of tab width */
+.historyCollegeCenter {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
 }
-.tabBtn:first-child { border-radius: 7px 0 0 7px; }
-.tabBtn:nth-child(2) { border-radius: 0 7px 7px 0; border-left: none; }
-.tabBtn--active { background: #0047a2; color: #fff; }
 
-/* Searchable select inline in history tab header */
 .historyCollegeInline {
-  margin-left: auto;
-  min-width: 280px;
-  max-width: 380px;
+  width: 100%;
   font-size: 0.875rem;
 }
 

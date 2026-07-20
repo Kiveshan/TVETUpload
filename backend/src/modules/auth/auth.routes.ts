@@ -5,6 +5,7 @@ import { pool } from "../../lib/db";
 import { asyncHandler } from "../../middleware/asyncHandler";
 import { HttpError } from "../../lib/httpError";
 import { loginRateLimit } from "../../middleware/loginRateLimit";
+import { requireAuth } from "../../middleware/auth";
 import { createSession, deleteSession, isSessionValid, SESSION_MAX_AGE_MS } from "./sessions";
 
 const router = Router();
@@ -103,6 +104,21 @@ router.get(
       },
     });
   })
+);
+
+router.patch(
+  "/contact",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const user = res.locals.user;
+    const { contactNumber } = req.body as { contactNumber?: string };
+    if (!contactNumber) throw new HttpError(400, "contactNumber is required");
+    await pool.query(
+      "UPDATE users SET contact_number = $1 WHERE user_id = $2",
+      [contactNumber, user.userId],
+    );
+    res.json({ ok: true });
+  }),
 );
 
 router.post(

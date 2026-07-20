@@ -2,10 +2,9 @@ import { useEffect, useId, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PortalLayout from '../../layouts/PortalLayout/PortalLayout';
 import Button from '../../components/Button/Button';
+import { useAuth } from '../../auth/useAuth';
 import { PATHS } from '../../routes/paths';
 import './ProviderInformation.css';
-
-const PROVIDERS = ['Coltech', 'ITS', 'Academia', 'Thusanang'] as const;
 
 const STEPS = [
   { number: 'Step 1', title: 'Provider' },
@@ -27,11 +26,12 @@ function loadSaved() {
 
 export default function ProviderInformation() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const saved = loadSaved();
 
-  const [provider, setProvider] = useState(saved.provider);
-  const [fullName, setFullName] = useState(saved.fullName);
-  const [email, setEmail]       = useState(saved.email);
+  const [provider] = useState(saved.provider || user?.providerName || '');
+  const [fullName, setFullName] = useState(saved.fullName || user?.fullName || '');
+  const [email, setEmail]       = useState(saved.email || user?.email || '');
   const [contact, setContact]   = useState(saved.contact);
 
   const providerId  = useId();
@@ -82,18 +82,13 @@ export default function ProviderInformation() {
               <label htmlFor={providerId} className="providerLabel">
                 Provider Name <span className="providerRequired">*</span>
               </label>
-              <select
+              <input
                 id={providerId}
-                className={`providerSelect${provider ? ' hasValue' : ''}`}
+                type="text"
+                className="providerInput"
                 value={provider}
-                onChange={(e) => setProvider(e.target.value)}
-                required
-              >
-                <option value="" disabled>Select provider</option>
-                {PROVIDERS.map((name) => (
-                  <option key={name} value={name}>{name}</option>
-                ))}
-              </select>
+                readOnly
+              />
             </div>
 
             <div className="providerField">

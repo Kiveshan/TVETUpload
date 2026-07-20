@@ -1,19 +1,42 @@
-import { Router } from "express";
-import { pool } from "../../lib/db";
-import { asyncHandler } from "../../middleware/asyncHandler";
-import { requireAuth } from "../../middleware/auth";
+import { Router } from 'express';
+import { requireAuth } from '../../middleware/auth';
+import { asyncHandler } from '../../middleware/asyncHandler';
+import { pool } from '../../lib/db';
+import { getAllColleges, getAvailableColleges, getSubmittedColleges } from './colleges.service';
 
 const router = Router();
 
 router.get(
-  "/",
+  '/',
   requireAuth,
   asyncHandler(async (_req, res) => {
-    const { rows } = await pool.query<{ college_id: number; college_name: string }>(
-      "SELECT college_id, college_name FROM public.college ORDER BY college_id ASC"
+    const colleges = await getAllColleges();
+    res.json({ colleges });
+  }),
+);
+
+router.get(
+  '/available',
+  requireAuth,
+  asyncHandler(async (_req, res) => {
+    const colleges = await getAvailableColleges();
+    res.json({ colleges });
+  }),
+);
+
+router.get(
+  '/submitted',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const user = res.locals.user;
+    const { rows } = await pool.query<{ provider_name: string }>(
+      'SELECT provider_name FROM users WHERE user_id = $1',
+      [user.userId],
     );
-    res.json({ colleges: rows });
-  })
+    const providerName = rows[0]?.provider_name ?? '';
+    const colleges = await getSubmittedColleges(providerName);
+    res.json({ colleges });
+  }),
 );
 
 export default router;

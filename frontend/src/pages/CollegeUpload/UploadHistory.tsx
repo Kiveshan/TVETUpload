@@ -1,20 +1,36 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../../lib/api';
+import PreviewModal from '../../components/PreviewModal/PreviewModal';
 import './UploadHistory.css';
 
-const DOCUMENT_TYPES = [
-  'College Information',
-  'Programme, Subject & Qualifications',
-  'Student Data',
-  'Staff Data',
-];
+interface HistoryDocument {
+  upload_id: number;
+  document_label: string;
+  file_name: string;
+  s3_key: string;
+  created_at: string;
+}
 
-const MOCK_FILENAME = 'Practice Note 2_College Performance Reporting T...';
+interface Props {
+  collegeId: number | null;
+}
+
+function useCollegeHistory(collegeId: number | null) {
+  return useQuery({
+    queryKey: ['uploads', 'history', collegeId],
+    queryFn: () =>
+      api.get<{ documents: HistoryDocument[] }>(`/uploads/history/${collegeId}`).then((r) => r.documents),
+    enabled: collegeId !== null,
+  });
+}
+
+interface TooltipPos { doc: string; top: number; left: number; }
 
 function EyeIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
     </svg>
   );
 }
@@ -22,52 +38,42 @@ function EyeIcon() {
 function ReuploadIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M23 4v6h-6" />
-      <path d="M1 20v-6h6" />
+      <path d="M23 4v6h-6" /><path d="M1 20v-6h6" />
       <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
     </svg>
   );
 }
 
-interface TooltipPos {
-  doc: string;
-  top: number;
-  left: number;
-  alignRight: boolean;
-}
 
-export default function UploadHistory() {
-  const [tooltip, setTooltip] = useState<TooltipPos | null>(null);
+export default function UploadHistory({ collegeId }: Props) {
+  const { data: documents = [], isLoading } = useCollegeHistory(collegeId);
+  const [tooltip, setTooltip]   = useState<TooltipPos | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<HistoryDocument | null>(null);
 
-  // Close tooltip on outside click
   useEffect(() => {
     if (!tooltip) return;
     function handler(e: MouseEvent) {
-      const target = e.target as Element;
-      if (!target.closest('.reuploadTooltip') && !target.closest('.iconBtn--reupload')) {
-        setTooltip(null);
-      }
+      const t = e.target as Element;
+      if (!t.closest('.reuploadTooltip') && !t.closest('.iconBtn--reupload')) setTooltip(null);
     }
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [tooltip]);
 
-  function handleReuploadClick(e: React.MouseEvent<HTMLButtonElement>, doc: string) {
-    if (tooltip?.doc === doc) {
-      setTooltip(null);
-      return;
-    }
-    const rect = e.currentTarget.getBoundingClientRect();
-    // position: fixed uses viewport coords — no scroll offsets needed
-    const tooltipWidth = 230;
-    const spaceRight = window.innerWidth - rect.right;
-    const alignRight = spaceRight < tooltipWidth + 8;
-    setTooltip({
-      doc,
-      top: rect.bottom + 8,
-      left: alignRight ? rect.right - tooltipWidth : rect.left,
-      alignRight,
-    });
+  if (!collegeId) {
+    return (
+      <div className="documentsCard">
+        <p style={{ color: '#6b7280', padding: '1.5rem 0' }}>Select a college above to view its upload history.</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return <div className="documentsCard"><p style={{ color: '#6b7280', padding: '1.5rem 0' }}>Loading…</p></div>;
+  }
+
+  if (!documents.length) {
+    return <div className="documentsCard"><p style={{ color: '#6b7280', padding: '1.5rem 0' }}>No documents found for this college.</p></div>;
   }
 
   return (
@@ -75,57 +81,64 @@ export default function UploadHistory() {
       <div className="documentsCard">
         <h2>Uploaded Documents</h2>
         <div className="tableWrapper">
-        <table className="docsTable">
-          <thead>
-            <tr>
-              <th>Document</th>
-              <th>File Name</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {DOCUMENT_TYPES.map((doc) => (
-              <tr key={doc}>
-                <td className="docName">{doc}</td>
-                <td className="fileName">{MOCK_FILENAME}</td>
-                <td>
-                  <span className="statusBadge statusBadge--uploaded">✓ Uploaded</span>
-                </td>
-                <td>
-                  <div className="actionsCell">
-                    <button className="iconBtn" title="View" aria-label="View file">
-                      <EyeIcon />
-                    </button>
-                    <button
-                      className="iconBtn iconBtn--reupload"
-                      title="Re-upload"
-                      aria-label="Re-upload file"
-                      onClick={(e) => handleReuploadClick(e, doc)}
-                    >
-                      <ReuploadIcon />
-                    </button>
-                  </div>
-                </td>
+          <table className="docsTable">
+            <thead>
+              <tr>
+                <th>Document</th>
+                <th>File Name</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {documents.map((doc) => (
+                <tr key={doc.upload_id}>
+                  <td className="docName">{doc.document_label}</td>
+                  <td className="fileName">{doc.file_name}</td>
+                  <td><span className="statusBadge statusBadge--uploaded">✓ Uploaded</span></td>
+                  <td>
+                    <div className="actionsCell">
+                      <button className="iconBtn" title="Preview" aria-label="Preview file" onClick={() => setPreviewDoc(doc)}>
+                        <EyeIcon />
+                      </button>
+                      <button
+                        className="iconBtn iconBtn--reupload"
+                        title="Re-upload"
+                        aria-label="Re-upload file"
+                        onClick={(e) => {
+                          if (tooltip?.doc === doc.s3_key) { setTooltip(null); return; }
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const tooltipWidth = 240;
+                          const spaceRight = window.innerWidth - rect.right;
+                          const left = spaceRight < tooltipWidth + 8 ? rect.right - tooltipWidth : rect.left;
+                          setTooltip({ doc: doc.s3_key, top: rect.bottom + 8, left });
+                        }}
+                      >
+                        <ReuploadIcon />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* Tooltip rendered at fixed position — bypasses any overflow:hidden ancestors */}
       {tooltip && (
-        <div
-          className="reuploadTooltip"
-          style={{ top: tooltip.top, left: tooltip.left }}
-        >
+        <div className="reuploadTooltip" style={{ top: tooltip.top, left: tooltip.left }}>
           <h4>Re-upload a File</h4>
           <p>To re-upload a file you will need to send a request.</p>
-          <button className="sendRequestBtn" onClick={() => setTooltip(null)}>
-            Send Request
-          </button>
+          <button className="sendRequestBtn" onClick={() => setTooltip(null)}>Send Request</button>
         </div>
+      )}
+
+      {previewDoc && (
+        <PreviewModal
+          s3Key={previewDoc.s3_key}
+          fileName={previewDoc.file_name}
+          onClose={() => setPreviewDoc(null)}
+        />
       )}
     </>
   );

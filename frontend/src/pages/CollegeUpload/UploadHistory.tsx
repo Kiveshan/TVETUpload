@@ -137,7 +137,16 @@ export default function UploadHistory({ collegeId }: Props) {
           <h4 className="reuploadTitle">Re-upload a File</h4>
           <p className="reuploadBody">To re-upload a file you will need to send a request.</p>
           <div className="reuploadActions">
-            <button className="sendRequestBtn" onClick={() => setTooltip(null)}>Send Request</button>
+            <button
+              className="sendRequestBtn"
+              onClick={() => {
+                const doc = documents.find((d) => d.s3_key === tooltip.doc);
+                setTooltip(null);
+                if (doc) setReuploadDoc(doc);
+              }}
+            >
+              Send Request
+            </button>
           </div>
         </div>
       )}

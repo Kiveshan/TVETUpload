@@ -1,0 +1,94 @@
+/* ── Success modal ── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalCard {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2.5rem 2.25rem 2rem;
+  width: 460px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+}
+
+.modalIconCircle {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #dcfce7;
+  border: 4px solid #bbf7d0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.modalTitle {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.5rem;
+}
+
+.modalSubtitle {
+  font-size: 0.88rem;
+  color: #64748b;
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.modalSummaryBox {
+  width: 100%;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+/* Provider Name + Selected College side by side */
+.modalSummaryTopRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.modalSummaryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.modalSummaryLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+
+.modalSummaryValue {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.modalRedirectNote {
+  margin-top: 1.1rem;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  text-align: center;
+}

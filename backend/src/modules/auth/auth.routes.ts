@@ -29,8 +29,9 @@ router.post(
       full_name: string;
       provider_name: string;
       password: string;
+      contact_number: string | null;
     }>(
-      "SELECT user_id, email, full_name, provider_name, password FROM users WHERE email = $1",
+      "SELECT user_id, email, full_name, provider_name, password, contact_number FROM users WHERE email = $1",
       [email.toLowerCase().trim()]
     );
 
@@ -66,6 +67,7 @@ router.post(
           email: user.email,
           fullName: user.full_name,
           providerName: user.provider_name,
+          contactNumber: user.contact_number ?? undefined,
         },
       });
   })

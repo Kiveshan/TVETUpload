@@ -40,6 +40,24 @@ CREATE TABLE uploads (
         ON DELETE RESTRICT
 );
 
+-- =========================
+-- REQUEST TABLE
+-- =========================
+CREATE TABLE request (
+    request_id SERIAL PRIMARY KEY,
+    upload_id INTEGER NOT NULL,
+    s3_bucket_link VARCHAR(500) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'Pending',
+
+    CONSTRAINT fk_request_upload
+        FOREIGN KEY (upload_id)
+        REFERENCES uploads(upload_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT chk_request_status
+        CHECK (status IN ('Pending', 'Approved', 'Rejected'))
+);
+
 INSERT INTO college (college_name)
 VALUES
 ('Buffalo City TVET College'),

@@ -3,4 +3,5 @@ export interface AuthUser {
   email: string;
   fullName: string;
   providerName: string;
+  contactNumber?: string;
 }

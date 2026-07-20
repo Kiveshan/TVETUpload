@@ -40,7 +40,7 @@ export default function ProviderInformation() {
   const [provider] = useState(saved.provider || user?.providerName || '');
   const [fullName, setFullName] = useState(saved.fullName || user?.fullName || '');
   const [email, setEmail]       = useState(saved.email || user?.email || '');
-  const [contact, setContact] = useState(saved.contact);
+  const [contact, setContact] = useState(saved.contact || user?.contactNumber || '');
 
   const providerId  = useId();
   const fullNameId  = useId();
@@ -145,13 +145,14 @@ export default function ProviderInformation() {
               <input
                 id={contactId}
                 type="tel"
-                className={`providerInput${phoneError ? ' providerInput--error' : ''}`}
+                className={`providerInput${user?.contactNumber ? ' providerInput--readonly' : ''}${!user?.contactNumber && phoneError ? ' providerInput--error' : ''}`}
                 placeholder="+27 71 234 5678"
                 value={contact}
-                onChange={(e) => setContact(e.target.value)}
+                onChange={user?.contactNumber ? undefined : (e) => setContact(e.target.value)}
+                readOnly={!!user?.contactNumber}
                 required
               />
-              {phoneError && (
+              {!user?.contactNumber && phoneError && (
                 <span className="providerError">{phoneError}</span>
               )}
             </div>

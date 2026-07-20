@@ -27,7 +27,7 @@ const DOCUMENT_TYPES = [
   { key: 'programme',  label: 'Programme, Subject & Qualifications', required: true  },
   { key: 'student',    label: 'Student Data',                        required: true  },
   { key: 'staff',      label: 'Staff Data',                          required: true  },
-  { key: 'headcount',  label: 'Head Count Enrollment',               required: false },
+  { key: 'headcount',  label: 'Head Count Enrollment 2025',           required: false },
 ];
 
 interface UploadEntry { fileName: string; uploadedAt: Date; }

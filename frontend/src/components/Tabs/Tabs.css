@@ -30,17 +30,7 @@
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.tab:hover {
-  color: #ffffff;
-  background: #1F9EC1;
-}
-
 .tabActive {
-  color: #0047A2;
-  background: #ffffff;
-}
-
-.tabActive:hover {
   color: #0047A2;
   background: #ffffff;
 }

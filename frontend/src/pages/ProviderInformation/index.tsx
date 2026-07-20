@@ -113,10 +113,11 @@ export default function ProviderInformation() {
               <input
                 id={fullNameId}
                 type="text"
-                className="providerInput"
+                className={`providerInput${user?.fullName ? ' providerInput--readonly' : ''}`}
                 placeholder="e.g. Thabo Mokoena"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                onChange={user?.fullName ? undefined : (e) => setFullName(e.target.value)}
+                readOnly={!!user?.fullName}
                 required
               />
             </div>
@@ -128,10 +129,11 @@ export default function ProviderInformation() {
               <input
                 id={emailId}
                 type="email"
-                className="providerInput"
+                className={`providerInput${user?.email ? ' providerInput--readonly' : ''}`}
                 placeholder="name@dhet.gov.za"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={user?.email ? undefined : (e) => setEmail(e.target.value)}
+                readOnly={!!user?.email}
                 required
               />
             </div>

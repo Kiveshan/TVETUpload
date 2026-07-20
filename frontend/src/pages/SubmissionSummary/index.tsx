@@ -59,6 +59,7 @@ export default function SubmissionSummary() {
   const [uploads, setUploads]         = useState<Record<string, StoredUpload>>(uploadState.uploads);
   const [confirmed, setConfirmed]     = useState(false);
   const [submitting, setSubmitting]   = useState(false);
+  const [submitProgress, setSubmitProgress] = useState(0);
   const [submitted, setSubmitted]     = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submissionDate]              = useState(nowFormatted);
@@ -84,6 +85,7 @@ export default function SubmissionSummary() {
   async function handleConfirm() {
     if (!canConfirm) return;
     setSubmitting(true);
+    setSubmitProgress(0);
     setSubmitError(null);
     try {
       const formData = new FormData();
@@ -91,7 +93,7 @@ export default function SubmissionSummary() {
       for (const [key, file] of Object.entries(ctxFiles)) {
         formData.append(key, file);
       }
-      await api.post('/uploads/submit', formData);
+      await api.postUpload('/uploads/submit', formData, setSubmitProgress);
       await queryClient.invalidateQueries({ queryKey: ['colleges'] });
       await queryClient.invalidateQueries({ queryKey: ['uploads'] });
       setSubmitted(true);
@@ -102,6 +104,10 @@ export default function SubmissionSummary() {
       setSubmitting(false);
     }
   }
+
+  const totalUploadBytes = Object.values(ctxFiles).reduce((sum, f) => sum + f.size, 0);
+  const uploadedMb = ((submitProgress * totalUploadBytes) / (1024 * 1024)).toFixed(1);
+  const totalMb = (totalUploadBytes / (1024 * 1024)).toFixed(1);
 
   useEffect(() => {
     if (!submitted) return;
@@ -182,6 +188,17 @@ export default function SubmissionSummary() {
           </p>
         )}
         {submitError && <p style={{ color: '#dc2626', fontSize: '0.875rem', margin: '0.5rem 0' }}>{submitError}</p>}
+
+        {submitting && (
+          <div className="uploadProgressWrap">
+            <div className="uploadProgressTrack">
+              <div className="uploadProgressFill" style={{ width: `${Math.round(submitProgress * 100)}%` }} />
+            </div>
+            <span className="uploadProgressLabel">
+              Uploading… {Math.round(submitProgress * 100)}% ({uploadedMb} / {totalMb} MB)
+            </span>
+          </div>
+        )}
 
         <div className="consentSection">
           <p className="consentWarning">Please review all uploaded information before confirming your submission. Once confirmed, your files will not be able to make any edits.</p>

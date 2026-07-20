@@ -1,5 +1,6 @@
 import { pool } from '../../lib/db';
 import { HttpError } from '../../lib/httpError';
+import { archiveExistingFile, uploadToS3, resolveContentType, sanitize } from './s3.service';
 
 interface UploadRecord {
   upload_id: number;
@@ -53,4 +54,42 @@ export async function getUploadsByCollege(
     [providerName, collegeId],
   );
   return rows;
+}
+
+/**
+ * Replaces the file behind an existing upload: archives the file currently
+ * at that document's S3 key into a sibling `Old/` subfolder, uploads the
+ * new file to the same document folder, and repoints the upload row's
+ * s3_bucket_link at the new key.
+ */
+export async function reuploadDocument(
+  userId: number,
+  uploadId: number,
+  file: { originalname: string; buffer: Buffer },
+): Promise<{ newKey: string }> {
+  const { rows } = await pool.query<{ s3_bucket_link: string; provider_name: string }>(
+    `SELECT u.s3_bucket_link, usr.provider_name
+     FROM uploads u
+     JOIN users usr ON usr.user_id = u.user_id
+     WHERE u.upload_id = $1`,
+    [uploadId],
+  );
+  const upload = rows[0];
+  if (!upload) throw new HttpError(404, 'Upload not found');
+
+  const requestingProvider = await resolveProvider(userId);
+  if (requestingProvider !== upload.provider_name) {
+    throw new HttpError(403, 'Not authorized to re-upload this document');
+  }
+
+  const currentKey = upload.s3_bucket_link;
+  await archiveExistingFile(currentKey);
+
+  const folderPrefix = currentKey.split('/').slice(0, -1).join('/');
+  const newKey = `${folderPrefix}/${sanitize(file.originalname)}`;
+  await uploadToS3(newKey, file.buffer, resolveContentType(file.originalname));
+
+  await pool.query('UPDATE uploads SET s3_bucket_link = $1 WHERE upload_id = $2', [newKey, uploadId]);
+
+  return { newKey };
 }

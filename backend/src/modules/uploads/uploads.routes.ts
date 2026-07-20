@@ -4,9 +4,9 @@ import { requireAuth } from '../../middleware/auth';
 import { asyncHandler } from '../../middleware/asyncHandler';
 import { HttpError } from '../../lib/httpError';
 import { pool } from '../../lib/db';
-import { buildKey, uploadToS3, downloadFromS3, FOLDER_MAP, FOLDER_LABELS } from './s3.service';
+import { buildKey, uploadToS3, downloadFromS3, resolveContentType, FOLDER_MAP, FOLDER_LABELS } from './s3.service';
 import { generatePreview } from './preview.service';
-import { resolveProvider, saveUploadBatch, getUploadsByCollege } from './uploads.service';
+import { resolveProvider, saveUploadBatch, getUploadsByCollege, reuploadDocument } from './uploads.service';
 
 const router = Router();
 
@@ -64,9 +64,7 @@ router.post(
       const file = fileArr[0];
       const folder = FOLDER_MAP[fieldKey];
       if (!folder) continue;
-      const ct = file.originalname.toLowerCase().endsWith('.csv')
-        ? 'text/csv'
-        : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      const ct = resolveContentType(file.originalname);
       const key = buildKey(providerName, college.college_name, folder, file.originalname);
       await uploadToS3(key, file.buffer, ct);
       s3Keys.push(key);
@@ -74,6 +72,26 @@ router.post(
 
     await saveUploadBatch(user.userId, parsedId, s3Keys);
     res.status(201).json({ message: 'Upload successful', college: college.college_name });
+  }),
+);
+
+router.post(
+  '/:uploadId/reupload',
+  requireAuth,
+  upload.single('file'),
+  asyncHandler(async (req, res) => {
+    const user = res.locals.user;
+    const uploadId = parseInt(String(req.params.uploadId), 10);
+    if (isNaN(uploadId)) throw new HttpError(400, 'Invalid uploadId');
+
+    const file = req.file;
+    if (!file) throw new HttpError(400, 'No file uploaded');
+    if (!file.originalname.match(/\.(xlsx|csv)$/i)) {
+      throw new HttpError(400, 'Only .xlsx and .csv files are accepted');
+    }
+
+    const { newKey } = await reuploadDocument(user.userId, uploadId, file);
+    res.json({ message: 'Re-upload successful', s3Key: newKey });
   }),
 );
 

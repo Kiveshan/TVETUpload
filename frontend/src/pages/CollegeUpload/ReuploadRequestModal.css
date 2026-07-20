@@ -8,6 +8,13 @@
   font-size: 1.25rem;
   font-weight: 700;
   color: #0f172a;
+  margin-bottom: 0.5rem;
+}
+
+.reuploadRequestSubtitle {
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.5;
   margin-bottom: 1.25rem;
 }
 
@@ -15,6 +22,75 @@
   margin-bottom: 1.5rem;
 }
 
+.reuploadRequestError {
+  margin-bottom: 1rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 6px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.875rem;
+}
+
 .reuploadRequestSubmit {
   width: 100%;
+}
+
+/* ── Success state ── */
+.reuploadRequestModal:has(.reuploadSuccessIconCircle) {
+  align-items: center;
+  text-align: center;
+}
+
+.reuploadSuccessIconCircle {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #dcfce7;
+  border: 4px solid #bbf7d0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.reuploadSuccessTitle {
+  margin-bottom: 0.5rem;
+}
+
+.reuploadSuccessSubtitle {
+  font-size: 0.88rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.reuploadSuccessSummaryBox {
+  width: 100%;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  text-align: left;
+}
+
+.reuploadSuccessLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  margin-top: 0.6rem;
+}
+
+.reuploadSuccessLabel:first-child {
+  margin-top: 0;
+}
+
+.reuploadSuccessValue {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
 }

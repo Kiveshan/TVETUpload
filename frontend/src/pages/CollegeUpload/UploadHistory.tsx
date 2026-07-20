@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import PreviewModal from '../../components/PreviewModal/PreviewModal';
+import ReuploadRequestModal from './ReuploadRequestModal';
 import './UploadHistory.css';
 
 interface HistoryDocument {
@@ -49,6 +50,7 @@ export default function UploadHistory({ collegeId }: Props) {
   const { data: documents = [], isLoading } = useCollegeHistory(collegeId);
   const [tooltip, setTooltip]   = useState<TooltipPos | null>(null);
   const [previewDoc, setPreviewDoc] = useState<HistoryDocument | null>(null);
+  const [reuploadDoc, setReuploadDoc] = useState<HistoryDocument | null>(null);
 
   useEffect(() => {
     if (!tooltip) return;
@@ -129,7 +131,16 @@ export default function UploadHistory({ collegeId }: Props) {
         <div className="reuploadTooltip" style={{ top: tooltip.top, left: tooltip.left }}>
           <h4>Re-upload a File</h4>
           <p>To re-upload a file you will need to send a request.</p>
-          <button className="sendRequestBtn" onClick={() => setTooltip(null)}>Send Request</button>
+          <button
+            className="sendRequestBtn"
+            onClick={() => {
+              const doc = documents.find((d) => d.s3_key === tooltip.doc);
+              setTooltip(null);
+              if (doc) setReuploadDoc(doc);
+            }}
+          >
+            Send Request
+          </button>
         </div>
       )}
 
@@ -138,6 +149,13 @@ export default function UploadHistory({ collegeId }: Props) {
           s3Key={previewDoc.s3_key}
           fileName={previewDoc.file_name}
           onClose={() => setPreviewDoc(null)}
+        />
+      )}
+
+      {reuploadDoc && (
+        <ReuploadRequestModal
+          documentLabel={reuploadDoc.document_label}
+          onClose={() => setReuploadDoc(null)}
         />
       )}
     </>

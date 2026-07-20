@@ -8,7 +8,6 @@ import { useAuth } from './auth/useAuth';
 import { PATHS } from './routes/paths';
 import Home from './pages/Home';
 import ProviderInformation from './pages/ProviderInformation';
-import SystemAdmin from './pages/SystemAdmin';
 import CollegeUpload from './pages/CollegeUpload';
 import SubmissionSummary from './pages/SubmissionSummary';
 
@@ -34,7 +33,6 @@ function AppRoutes() {
       <Route path={PATHS.providerInformation} element={<ProviderInformation />} />
       <Route path={PATHS.collegeUpload}       element={<CollegeUpload />} />
       <Route path={PATHS.submissionSummary}   element={<SubmissionSummary />} />
-      <Route path={PATHS.systemAdmin}         element={<SystemAdmin />} />
     </Routes>
   );
 }

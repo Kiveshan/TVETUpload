@@ -32,12 +32,12 @@ const DOC_ORDER     = ['collegeInfo', 'programme', 'student', 'headcount', 'staf
 const REQUIRED_KEYS = new Set(['collegeInfo', 'programme', 'student', 'staff']);
 
 function loadProvider(): ProviderForm {
-  try { const r = sessionStorage.getItem('tvet_provider_form'); if (r) return JSON.parse(r); } catch {}
+  try { const r = sessionStorage.getItem('tvet_provider_form'); if (r) return JSON.parse(r); } catch { /* ignore parse errors */ }
   return { provider: '', fullName: '', email: '', contact: '' };
 }
 
 function loadUploadState(): StoredUploadState {
-  try { const r = sessionStorage.getItem('tvet_college_upload'); if (r) return JSON.parse(r); } catch {}
+  try { const r = sessionStorage.getItem('tvet_college_upload'); if (r) return JSON.parse(r); } catch { /* ignore parse errors */ }
   return { selectedCollege: '', selectedCollegeName: '', uploads: {} };
 }
 

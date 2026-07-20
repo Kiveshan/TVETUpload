@@ -35,6 +35,7 @@ export function UploadFilesProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useUploadFiles() {
   const ctx = useContext(UploadFilesContext);
   if (!ctx) throw new Error('useUploadFiles must be used within UploadFilesProvider');

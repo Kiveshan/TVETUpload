@@ -46,11 +46,14 @@ jobs:
       # Deploy artifact is just the backend: compiled dist/ plus its own
       # production node_modules, installed standalone (not via the npm
       # workspace) so nothing from the frontend ends up on the EB instance.
+      # .platform must sit at the zip root for EB to pick up its nginx/hook
+      # overrides.
       - name: Assemble deploy package
         run: |
           mkdir deploy
           cp -r backend/dist deploy/dist
           cp backend/package.json deploy/package.json
+          cp -r .platform deploy/.platform
           cd deploy
           npm install --omit=dev --no-audit --no-fund
           zip -rq ../eb-deploy.zip .

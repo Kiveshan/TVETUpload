@@ -54,6 +54,12 @@
   color: #0f172a;
 }
 
+.requiredStar {
+  color: #dc2626;
+  margin-left: 0.2rem;
+  font-weight: 700;
+}
+
 .optionalTag {
   font-size: 0.7rem;
   font-weight: 500;

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import PortalLayout from '../../layouts/PortalLayout/PortalLayout';
 import Breadcrumb from '../../components/Breadcrumb/Breadcrumb';
+import Tabs, { type TabOption } from '../../components/Tabs/Tabs';
 import SearchableSelect from '../../components/SearchableSelect/SearchableSelect';
 import PreviewModal from '../../components/PreviewModal/PreviewModal';
 import UploadHistory from './UploadHistory';
@@ -51,6 +52,11 @@ function formatDate(d: Date) {
 }
 
 type Tab = 'new' | 'history';
+
+const UPLOAD_TABS: TabOption<Tab>[] = [
+  { value: 'new',     label: 'New Upload' },
+  { value: 'history', label: 'Upload History' },
+];
 
 export default function CollegeUpload() {
   const saved   = loadSaved();
@@ -114,17 +120,18 @@ export default function CollegeUpload() {
       {activeTab === 'new' && <Breadcrumb items={STEPS} activeStep={2} />}
 
       <div className="uploadTabRow">
-        <button type="button" className={`tabBtn${activeTab === 'new' ? ' tabBtn--active' : ''}`} onClick={() => setActiveTab('new')}>New Upload</button>
-        <button type="button" className={`tabBtn${activeTab === 'history' ? ' tabBtn--active' : ''}`} onClick={() => setActiveTab('history')}>Upload History</button>
+        <Tabs options={UPLOAD_TABS} value={activeTab} onChange={setActiveTab} />
         {activeTab === 'history' && (
-          <SearchableSelect
-            options={submittedOptions}
-            value={historyCollegeId}
-            onChange={setHistoryCollegeId}
-            placeholder={loadingSubmitted ? 'Loading…' : 'Select a college to view'}
-            disabled={loadingSubmitted}
-            className="historyCollegeInline"
-          />
+          <div className="historyCollegeCenter">
+            <SearchableSelect
+              options={submittedOptions}
+              value={historyCollegeId}
+              onChange={setHistoryCollegeId}
+              placeholder={loadingSubmitted ? 'Loading…' : 'Select a college to view'}
+              disabled={loadingSubmitted}
+              className="historyCollegeInline"
+            />
+          </div>
         )}
       </div>
 
@@ -158,7 +165,10 @@ export default function CollegeUpload() {
                         <div className="docIconBox"><DocIcon /></div>
                         <div className="docCardInfo">
                           <div className="docCardTitleRow">
-                            <span className="docCardTitle">{doc.label}</span>
+                            <span className="docCardTitle">
+                              {doc.label}
+                              {doc.required && <span className="requiredStar">*</span>}
+                            </span>
                             {!doc.required && <span className="optionalTag">Optional</span>}
                           </div>
                           <span className="docCardSubtitle">Excel (.xlsx) or CSV</span>

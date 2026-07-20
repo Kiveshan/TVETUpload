@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import PortalLayout from '../../layouts/PortalLayout/PortalLayout';
 import Button from '../../components/Button/Button';
 import { useAuth } from '../../auth/useAuth';
+import { api } from '../../lib/api';
 import { PATHS } from '../../routes/paths';
 import './ProviderInformation.css';
 
@@ -18,10 +19,17 @@ function loadSaved() {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw) as { provider: string; fullName: string; email: string; contact: string };
-  } catch {
-    // ignore parse errors
-  }
+  } catch { /* ignore */ }
   return { provider: '', fullName: '', email: '', contact: '' };
+}
+
+function validateSAPhone(val: string): string {
+  if (!val.trim()) return '';
+  const stripped = val.replace(/[\s\-()]/g, '');
+  if (!/^(\+27|0)[0-9]{9}$/.test(stripped)) {
+    return 'Enter a valid SA number (e.g. 071 234 5678 or +27 71 234 5678)';
+  }
+  return '';
 }
 
 export default function ProviderInformation() {
@@ -32,27 +40,34 @@ export default function ProviderInformation() {
   const [provider] = useState(saved.provider || user?.providerName || '');
   const [fullName, setFullName] = useState(saved.fullName || user?.fullName || '');
   const [email, setEmail]       = useState(saved.email || user?.email || '');
-  const [contact, setContact]   = useState(saved.contact);
+  const [contact, setContact] = useState(saved.contact);
 
   const providerId  = useId();
   const fullNameId  = useId();
   const emailId     = useId();
   const contactId   = useId();
 
-  // Persist form to sessionStorage so Back navigation restores it
   useEffect(() => {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ provider, fullName, email, contact }));
   }, [provider, fullName, email, contact]);
+
+  const phoneError = contact.trim() ? validateSAPhone(contact) : '';
+  const phoneValid = !phoneError;
 
   const isComplete =
     provider.trim() !== '' &&
     fullName.trim() !== '' &&
     email.trim() !== '' &&
-    contact.trim() !== '';
+    contact.trim() !== '' &&
+    phoneValid;
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (isComplete) navigate(PATHS.collegeUpload);
+    if (phoneError) return;
+    try {
+      await api.patch('/auth/contact', { contactNumber: contact });
+    } catch { /* non-blocking — navigate regardless */ }
+    navigate(PATHS.collegeUpload);
   }
 
   return (
@@ -85,7 +100,7 @@ export default function ProviderInformation() {
               <input
                 id={providerId}
                 type="text"
-                className="providerInput"
+                className="providerInput providerInput--readonly"
                 value={provider}
                 readOnly
               />
@@ -98,10 +113,11 @@ export default function ProviderInformation() {
               <input
                 id={fullNameId}
                 type="text"
-                className="providerInput"
+                className={`providerInput${user?.fullName ? ' providerInput--readonly' : ''}`}
                 placeholder="e.g. Thabo Mokoena"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                onChange={user?.fullName ? undefined : (e) => setFullName(e.target.value)}
+                readOnly={!!user?.fullName}
                 required
               />
             </div>
@@ -113,10 +129,11 @@ export default function ProviderInformation() {
               <input
                 id={emailId}
                 type="email"
-                className="providerInput"
+                className={`providerInput${user?.email ? ' providerInput--readonly' : ''}`}
                 placeholder="name@dhet.gov.za"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={user?.email ? undefined : (e) => setEmail(e.target.value)}
+                readOnly={!!user?.email}
                 required
               />
             </div>
@@ -128,12 +145,15 @@ export default function ProviderInformation() {
               <input
                 id={contactId}
                 type="tel"
-                className="providerInput"
-                placeholder="+27 12 345 6789"
+                className={`providerInput${phoneError ? ' providerInput--error' : ''}`}
+                placeholder="+27 71 234 5678"
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
                 required
               />
+              {phoneError && (
+                <span className="providerError">{phoneError}</span>
+              )}
             </div>
           </div>
 

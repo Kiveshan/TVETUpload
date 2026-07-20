@@ -26,7 +26,7 @@ function useCollegeHistory(collegeId: number | null) {
   });
 }
 
-interface TooltipPos { doc: string; top: number; left: number; }
+interface TooltipPos { doc: string; top: number; left: number; caretLeft: number; }
 
 function EyeIcon() {
   return (
@@ -110,10 +110,12 @@ export default function UploadHistory({ collegeId }: Props) {
                         onClick={(e) => {
                           if (tooltip?.doc === doc.s3_key) { setTooltip(null); return; }
                           const rect = e.currentTarget.getBoundingClientRect();
-                          const tooltipWidth = 240;
+                          const tooltipWidth = 340;
                           const spaceRight = window.innerWidth - rect.right;
                           const left = spaceRight < tooltipWidth + 8 ? rect.right - tooltipWidth : rect.left;
-                          setTooltip({ doc: doc.s3_key, top: rect.bottom + 8, left });
+                          const buttonCenterX = rect.left + rect.width / 2;
+                          const caretLeft = Math.min(Math.max(buttonCenterX - left, 20), tooltipWidth - 20);
+                          setTooltip({ doc: doc.s3_key, top: rect.bottom + 8, left, caretLeft });
                         }}
                       >
                         <ReuploadIcon />
@@ -128,19 +130,15 @@ export default function UploadHistory({ collegeId }: Props) {
       </div>
 
       {tooltip && (
-        <div className="reuploadTooltip" style={{ top: tooltip.top, left: tooltip.left }}>
-          <h4>Re-upload a File</h4>
-          <p>To re-upload a file you will need to send a request.</p>
-          <button
-            className="sendRequestBtn"
-            onClick={() => {
-              const doc = documents.find((d) => d.s3_key === tooltip.doc);
-              setTooltip(null);
-              if (doc) setReuploadDoc(doc);
-            }}
-          >
-            Send Request
-          </button>
+        <div
+          className="reuploadTooltip"
+          style={{ top: tooltip.top, left: tooltip.left, '--caret-left': `${tooltip.caretLeft}px` } as React.CSSProperties}
+        >
+          <h4 className="reuploadTitle">Re-upload a File</h4>
+          <p className="reuploadBody">To re-upload a file you will need to send a request.</p>
+          <div className="reuploadActions">
+            <button className="sendRequestBtn" onClick={() => setTooltip(null)}>Send Request</button>
+          </div>
         </div>
       )}
 

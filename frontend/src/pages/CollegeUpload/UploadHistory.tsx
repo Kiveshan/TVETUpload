@@ -134,8 +134,8 @@ export default function UploadHistory({ collegeId }: Props) {
           className="reuploadTooltip"
           style={{ top: tooltip.top, left: tooltip.left, '--caret-left': `${tooltip.caretLeft}px` } as React.CSSProperties}
         >
-          <h4 className="reuploadTitle">Re-upload a File</h4>
-          <p className="reuploadBody">To re-upload a file you will need to send a request.</p>
+          <h4 className="reuploadTitle">Replace This File?</h4>
+          <p className="reuploadBody">This will replace the current file with a new one. Continue to choose a replacement.</p>
           <div className="reuploadActions">
             <button
               className="sendRequestBtn"
@@ -145,7 +145,7 @@ export default function UploadHistory({ collegeId }: Props) {
                 if (doc) setReuploadDoc(doc);
               }}
             >
-              Send Request
+              Continue
             </button>
           </div>
         </div>
@@ -161,6 +161,7 @@ export default function UploadHistory({ collegeId }: Props) {
 
       {reuploadDoc && (
         <ReuploadRequestModal
+          uploadId={reuploadDoc.upload_id}
           documentLabel={reuploadDoc.document_label}
           onClose={() => setReuploadDoc(null)}
         />

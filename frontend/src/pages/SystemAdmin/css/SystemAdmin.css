@@ -1,9 +1,0 @@
-.systemAdminMain {
-  max-width: 1400px;
-}
-
-@media (max-width: 600px) {
-  .systemAdminMain {
-    padding: 1.25rem 1rem 2rem;
-  }
-}

@@ -95,7 +95,7 @@ export default function UploadHistory({ collegeId }: Props) {
             <tbody>
               {documents.map((doc) => (
                 <tr key={doc.upload_id}>
-                  <td className="docName">{doc.document_label}</td>
+                  <td className="docName">{doc.document_label === 'Head Count Enrollment' ? 'Head Count Enrollment 2025' : doc.document_label}</td>
                   <td className="fileName">{doc.file_name}</td>
                   <td><span className="statusBadge statusBadge--uploaded">✓ Uploaded</span></td>
                   <td>

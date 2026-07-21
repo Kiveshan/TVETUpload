@@ -25,7 +25,7 @@ const DOC_LABELS: Record<string, string> = {
   collegeInfo: 'College Information',
   programme:   'Programme, Subject & Qualifications',
   student:     'Student Data',
-  headcount:   'Headcount Enrollment',
+  headcount:   'Head Count Enrollment 2025',
   staff:       'Staff Data',
 };
 const DOC_ORDER     = ['collegeInfo', 'programme', 'student', 'headcount', 'staff'];
@@ -115,6 +115,12 @@ export default function SubmissionSummary() {
     return () => clearTimeout(timer);
   }, [submitted, navigate, clearFiles]);
 
+  useEffect(() => {
+    if (!hasFiles && allRequiredPresent) {
+      navigate(PATHS.collegeUpload, { replace: true });
+    }
+  }, [hasFiles, allRequiredPresent, navigate]);
+
   const previewFile = previewKey ? ctxFiles[previewKey] : undefined;
 
   return (
@@ -182,11 +188,7 @@ export default function SubmissionSummary() {
           </div>
         </div>
 
-        {!hasFiles && allRequiredPresent && (
-          <p style={{ color: '#dc2626', fontSize: '0.875rem', margin: '0.5rem 0' }}>
-            Session files lost (page was refreshed). Please go back and re-select your files.
-          </p>
-        )}
+
         {submitError && <p style={{ color: '#dc2626', fontSize: '0.875rem', margin: '0.5rem 0' }}>{submitError}</p>}
 
         {submitting && (

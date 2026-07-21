@@ -4,7 +4,7 @@ import { requireAuth } from '../../middleware/auth';
 import { asyncHandler } from '../../middleware/asyncHandler';
 import { HttpError } from '../../lib/httpError';
 import { pool } from '../../lib/db';
-import { buildKey, uploadToS3, downloadFromS3, resolveContentType, FOLDER_MAP, FOLDER_LABELS } from './s3.service';
+import { buildKey, uploadToS3, downloadFromS3, resolveContentType, FOLDER_MAP, FOLDER_LABELS, FOLDER_ORDER } from './s3.service';
 import { generatePreview } from './preview.service';
 import { resolveProvider, saveUploadBatch, getUploadsByCollege, reuploadDocument } from './uploads.service';
 
@@ -106,18 +106,22 @@ router.get(
     const providerName = await resolveProvider(user.userId);
     const uploads = await getUploadsByCollege(providerName, collegeId);
 
-    const documents = uploads.map((u) => {
-      const parts = u.s3_bucket_link.split('/');
-      const folder = parts[2] ?? '';
-      const fileName = parts[3] ?? u.s3_bucket_link;
-      return {
-        upload_id: u.upload_id,
-        document_label: FOLDER_LABELS[folder] ?? folder,
-        file_name: fileName,
-        s3_key: u.s3_bucket_link,
-        created_at: u.created_at,
-      };
-    });
+    const documents = uploads
+      .map((u) => {
+        const parts = u.s3_bucket_link.split('/');
+        const folder = parts[2] ?? '';
+        const fileName = parts[3] ?? u.s3_bucket_link;
+        return {
+          upload_id: u.upload_id,
+          document_label: FOLDER_LABELS[folder] ?? folder,
+          file_name: fileName,
+          s3_key: u.s3_bucket_link,
+          created_at: u.created_at,
+          _folder: folder,
+        };
+      })
+      .sort((a, b) => FOLDER_ORDER.indexOf(a._folder) - FOLDER_ORDER.indexOf(b._folder))
+      .map(({ _folder, ...doc }) => doc);
 
     res.json({ documents });
   }),

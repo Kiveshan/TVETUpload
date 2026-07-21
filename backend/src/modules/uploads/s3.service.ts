@@ -34,6 +34,17 @@ export const FOLDER_LABELS: Record<string, string> = {
   head_count_enrollment: 'Head Count Enrollment',
 };
 
+// Fixed display order for the Upload History table — Head Count Enrollment
+// always last. Not tied to created_at, which is unstable to sort by since
+// every document in one submission shares the same transaction timestamp.
+export const FOLDER_ORDER = [
+  'college_information',
+  'staff',
+  'P_S_Q',
+  'student',
+  'head_count_enrollment',
+];
+
 export function sanitize(name: string): string {
   return name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-.]/g, '');
 }

@@ -80,7 +80,11 @@ export default function PreviewModal({ file, s3Key, fileName, onClose }: Props) 
             <h2 className="previewTitle">File Preview</h2>
             {fileName && <p className="previewFileName">{fileName}</p>}
           </div>
-          <button className="previewClose" onClick={onClose} aria-label="Close preview">✕</button>
+          <button className="previewClose" onClick={onClose} aria-label="Close preview">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
         </div>
 
         <div className="previewBody">

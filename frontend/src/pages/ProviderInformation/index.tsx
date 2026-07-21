@@ -18,9 +18,9 @@ const STORAGE_KEY = 'tvet_provider_form';
 function loadSaved() {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as { provider: string; fullName: string; email: string; contact: string };
+    if (raw) return JSON.parse(raw) as { provider: string; email: string; contact: string };
   } catch { /* ignore */ }
-  return { provider: '', fullName: '', email: '', contact: '' };
+  return { provider: '', email: '', contact: '' };
 }
 
 function validateSAPhone(val: string): string {
@@ -38,25 +38,22 @@ export default function ProviderInformation() {
   const saved = loadSaved();
 
   const [provider] = useState(saved.provider || user?.providerName || '');
-  const [fullName, setFullName] = useState(saved.fullName || user?.fullName || '');
-  const [email, setEmail]       = useState(saved.email || user?.email || '');
+  const [email, setEmail]   = useState(saved.email || user?.email || '');
   const [contact, setContact] = useState(saved.contact || user?.contactNumber || '');
 
-  const providerId  = useId();
-  const fullNameId  = useId();
-  const emailId     = useId();
-  const contactId   = useId();
+  const providerId = useId();
+  const emailId    = useId();
+  const contactId  = useId();
 
   useEffect(() => {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ provider, fullName, email, contact }));
-  }, [provider, fullName, email, contact]);
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ provider, email, contact }));
+  }, [provider, email, contact]);
 
   const phoneError = contact.trim() ? validateSAPhone(contact) : '';
   const phoneValid = !phoneError;
 
   const isComplete =
     provider.trim() !== '' &&
-    fullName.trim() !== '' &&
     email.trim() !== '' &&
     contact.trim() !== '' &&
     phoneValid;
@@ -103,22 +100,6 @@ export default function ProviderInformation() {
                 className="providerInput providerInput--readonly"
                 value={provider}
                 readOnly
-              />
-            </div>
-
-            <div className="providerField">
-              <label htmlFor={fullNameId} className="providerLabel">
-                Full Name <span className="providerRequired">*</span>
-              </label>
-              <input
-                id={fullNameId}
-                type="text"
-                className={`providerInput${user?.fullName ? ' providerInput--readonly' : ''}`}
-                placeholder="e.g. Thabo Mokoena"
-                value={fullName}
-                onChange={user?.fullName ? undefined : (e) => setFullName(e.target.value)}
-                readOnly={!!user?.fullName}
-                required
               />
             </div>
 

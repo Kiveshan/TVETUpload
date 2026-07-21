@@ -121,19 +121,18 @@ export default function CollegeUpload() {
 
       <div className="uploadTabRow">
         <Tabs options={UPLOAD_TABS} value={activeTab} onChange={setActiveTab} />
-        {activeTab === 'history' && (
-          <div className="historyCollegeCenter">
-            <SearchableSelect
-              options={submittedOptions}
-              value={historyCollegeId}
-              onChange={setHistoryCollegeId}
-              placeholder={loadingSubmitted ? 'Loading…' : 'Select a college to view'}
-              disabled={loadingSubmitted}
-              className="historyCollegeInline"
-            />
-          </div>
-        )}
       </div>
+      {activeTab === 'history' && (
+        <div className="historyCollegeFilter">
+          <SearchableSelect
+            options={submittedOptions}
+            value={historyCollegeId}
+            onChange={setHistoryCollegeId}
+            placeholder={loadingSubmitted ? 'Loading…' : 'Select a college to view'}
+            disabled={loadingSubmitted}
+          />
+        </div>
+      )}
 
       {activeTab === 'new' ? (
         <>

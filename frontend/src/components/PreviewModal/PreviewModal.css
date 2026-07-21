@@ -45,20 +45,22 @@
 }
 
 .previewClose {
-  background: none;
+  width: 24px;
+  height: 24px;
   border: none;
-  font-size: 1.25rem;
+  background: none;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  color: #6b7280;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.375rem;
-  line-height: 1;
+  border-radius: 6px;
   flex-shrink: 0;
+  padding: 0;
 }
 
 .previewClose:hover {
-  background: #f3f4f6;
-  color: #1a1a2e;
+  background: #fee2e2;
 }
 
 .previewBody {

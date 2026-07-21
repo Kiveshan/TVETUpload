@@ -7,17 +7,9 @@
   min-height: 36px;
 }
 
-/* Absolutely centered in the full row regardless of tab width */
-.historyCollegeCenter {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 320px;
-}
-
-.historyCollegeInline {
+.historyCollegeFilter {
   width: 100%;
-  font-size: 0.875rem;
+  margin-bottom: 1.25rem;
 }
 
 /* ── College selection card ── */

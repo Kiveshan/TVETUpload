@@ -8,6 +8,7 @@ CREATE TABLE users (
     provider_name VARCHAR(255) NOT NULL,
     contact_number VARCHAR(20),
     password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'provider',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -27,6 +28,7 @@ CREATE TABLE uploads (
     user_id INTEGER NOT NULL,
     s3_bucket_link TEXT NOT NULL,
     college_id INTEGER NOT NULL,
+    reupload_count INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_upload_user

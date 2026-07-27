@@ -1,0 +1,302 @@
+/* ── Provider grid tiles ── */
+.providerGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.providerTile {
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.4rem 1.25rem 1.2rem;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.providerTile:hover {
+  border-color: #0047a2;
+  box-shadow: 0 2px 12px rgba(0,71,162,0.08);
+}
+.providerTile--selected {
+  border-color: #0047a2;
+  background: #f0f6ff;
+  box-shadow: 0 2px 16px rgba(0,71,162,0.12);
+}
+.providerTile--empty { opacity: 0.65; }
+
+.providerTile__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #1e293b;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+.providerTile--selected .providerTile__icon { background: #0047a2; }
+
+.providerTile__name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.providerTile__stats {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.1rem;
+}
+
+.providerTile__stat {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+.providerTile__stat strong {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.providerTile__divider {
+  width: 1px;
+  height: 14px;
+  background: #e2e8f0;
+}
+
+.providerTile__nodata {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.1rem;
+}
+
+/* ── Provider detail (college table below grid) ── */
+.providerDetail {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-top: 0.25rem;
+}
+
+.chevron {
+  color: #94a3b8;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.chevron--open { transform: rotate(180deg); }
+
+/* ── College table ── */
+.collegeTableWrap {
+  overflow-x: auto;
+}
+
+.collegeTable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+.collegeTable th {
+  background: #f4f8fa;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.collegeTable td {
+  padding: 0.85rem 1.25rem;
+  font-size: 0.86rem;
+  color: #374151;
+  border-bottom: 1px solid #f8fafc;
+  vertical-align: middle;
+}
+
+.collegeTable tbody tr:last-child td { border-bottom: none; }
+.collegeTable tbody tr:hover td { background: #f8fafc; }
+
+.td--collegeName {
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.inlineProgress {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 140px;
+}
+.inlineProgress .progressTrack { flex: 1; }
+.inlineProgress span { font-size: 0.78rem; color: #64748b; white-space: nowrap; }
+
+/* ── File modal overlay ── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+}
+
+.modalBox {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 660px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.modalBox__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.modalBox__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.modalBox__subtitle {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin: 0.15rem 0 0;
+}
+
+.modalCloseBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+.modalCloseBtn:hover { color: #0f172a; }
+
+.modalBox__body { overflow-y: auto; flex: 1; }
+
+.modalFileRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+.modalFileRow:last-child { border-bottom: none; }
+
+.modalFileRow__label {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #0f172a;
+  flex: 0 0 185px;
+}
+
+.modalFileRow__name {
+  font-size: 0.8rem;
+  color: #0047a2;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modalFileRow__updated { font-size: 0.75rem; color: #94a3b8; white-space: nowrap; }
+.modalFileRow__actions { margin-left: auto; flex-shrink: 0; }
+
+.modalBox__footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+
+/* ── Download button ── */
+.dlBtnSm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #334155;
+  white-space: nowrap;
+}
+.dlBtnSm:hover { background: #e2e8f0; }
+.dlBtnSm:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ── Colleges-for-doc modal ── */
+.docCollegeItem {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 1.5rem;
+  border-bottom: 1px solid #f8fafc;
+  font-size: 0.875rem;
+  color: #374151;
+}
+.docCollegeItem:last-child { border-bottom: none; }
+
+.docCollegeItem__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.docCollegeItem__dot--yes { background: #16a34a; }
+.docCollegeItem__dot--no  { background: #dc2626; }
+
+.docCollegeItem__provider {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-left: auto;
+}
+
+.docModalSection {
+  padding: 0.75rem 1.5rem 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}

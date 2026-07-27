@@ -6,6 +6,7 @@ import { errorHandler } from "./middleware/errorHandler";
 import authRouter from "./modules/auth/auth.routes";
 import collegeRouter from "./modules/collegeUpload/index";
 import uploadsRouter from "./modules/uploads/uploads.routes";
+import adminRouter from "./modules/admin/admin.routes";
 import healthRouter from "./modules/health/health.routes";
 
 const app = express();
@@ -14,7 +15,7 @@ app.set("trust proxy", 1);
 
 app.use(helmet({ contentSecurityPolicy: false }));
 
-const allowedOrigins = (process.env.FRONTEND_ORIGINS ?? "http://localhost:5173")
+const allowedOrigins = (process.env.FRONTEND_ORIGINS ?? "http://localhost:5173,http://localhost:5174")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
@@ -40,6 +41,7 @@ api.use("/health", healthRouter);
 api.use("/auth", authRouter);
 api.use("/colleges", collegeRouter);
 api.use("/uploads", uploadsRouter);
+api.use("/admin", adminRouter);
 
 app.use("/api", api);
 app.use(errorHandler);

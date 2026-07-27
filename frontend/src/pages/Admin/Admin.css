@@ -1,0 +1,220 @@
+/* ── Page shell ── */
+.adminWrap {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f0f4f9;
+}
+
+.adminBody {
+  flex: 1;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* ── Page header ── */
+.adminPageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.adminPageHeader__left h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.25rem;
+}
+
+.adminPageHeader__left p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.adminPageHeader__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.adminPageHeader__updated {
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+/* ── Shared buttons ── */
+.btnOutline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.btnOutline:hover { border-color: #0047a2; color: #0047a2; }
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #0047a2;
+  color: #fff;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.btnPrimary:hover { background: #003a84; }
+
+/* ── Stats grid (4 cards) ── */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.statCard {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.2rem 1.4rem 1.1rem;
+}
+
+.statCard__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.statCard__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.statCard__val {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1;
+}
+.statCard__val--green { color: #16a34a; }
+.statCard__val--red   { color: #dc2626; }
+.statCard__val--blue  { color: #0047a2; }
+
+.statCard__icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.statCard__icon--grey  { background: #f1f5f9; color: #64748b; }
+.statCard__icon--green { background: #dcfce7; color: #16a34a; }
+.statCard__icon--red   { background: #fee2e2; color: #dc2626; }
+.statCard__icon--blue  { background: #dbeafe; color: #0047a2; }
+
+.statCard__sub {
+  font-size: 0.78rem;
+  color: #64748b;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+.statCard__sub--red { color: #dc2626; }
+
+/* ── Progress bar ── */
+.progressTrack {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.progressFill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+/* ── Section layout ── */
+.adminSection {
+  margin-bottom: 2.25rem;
+}
+
+.adminSection__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.adminSection__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.2rem;
+}
+
+.adminSection__sub {
+  font-size: 0.83rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.adminSection__subRed {
+  font-size: 0.83rem;
+  color: #dc2626;
+  margin: 0;
+}
+
+/* ── Empty / loading ── */
+.adminEmpty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.adminLoading {
+  text-align: center;
+  padding: 5rem 1rem;
+  color: #94a3b8;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .statsGrid { grid-template-columns: 1fr 1fr; }
+  .providerGrid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 600px) {
+  .statsGrid { grid-template-columns: 1fr; }
+  .adminBody { padding: 1rem 1rem 3rem; }
+  .docRow__right { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+}

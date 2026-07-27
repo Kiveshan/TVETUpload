@@ -16,7 +16,7 @@ export default function Home() {
 
   function handleLoginSuccess(user: AuthUser) {
     flushSync(() => { login(user); });
-    navigate(PATHS.providerInformation);
+    navigate(user.role === 'admin' ? PATHS.admin : PATHS.providerInformation);
   }
 
   return (

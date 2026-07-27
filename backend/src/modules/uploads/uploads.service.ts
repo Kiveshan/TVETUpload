@@ -89,7 +89,10 @@ export async function reuploadDocument(
   const newKey = `${folderPrefix}/${sanitize(file.originalname)}`;
   await uploadToS3(newKey, file.buffer, resolveContentType(file.originalname));
 
-  await pool.query('UPDATE uploads SET s3_bucket_link = $1 WHERE upload_id = $2', [newKey, uploadId]);
+  await pool.query(
+    'UPDATE uploads SET s3_bucket_link = $1, reupload_count = reupload_count + 1 WHERE upload_id = $2',
+    [newKey, uploadId],
+  );
 
   return { newKey };
 }

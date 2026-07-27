@@ -10,6 +10,7 @@ import Home from './pages/Home';
 import ProviderInformation from './pages/ProviderInformation';
 import CollegeUpload from './pages/CollegeUpload';
 import SubmissionSummary from './pages/SubmissionSummary';
+import Admin from './pages/Admin/Admin';
 
 function SessionCleaner({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -33,6 +34,7 @@ function AppRoutes() {
       <Route path={PATHS.providerInformation} element={<ProviderInformation />} />
       <Route path={PATHS.collegeUpload}       element={<CollegeUpload />} />
       <Route path={PATHS.submissionSummary}   element={<SubmissionSummary />} />
+      <Route path={PATHS.admin}               element={<Admin />} />
     </Routes>
   );
 }

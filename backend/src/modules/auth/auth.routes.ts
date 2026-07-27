@@ -30,8 +30,9 @@ router.post(
       provider_name: string;
       password: string;
       contact_number: string | null;
+      role: string;
     }>(
-      "SELECT user_id, email, full_name, provider_name, password, contact_number FROM users WHERE email = $1",
+      "SELECT user_id, email, full_name, provider_name, password, contact_number, role FROM users WHERE email = $1",
       [email.toLowerCase().trim()]
     );
 
@@ -49,6 +50,7 @@ router.post(
         email: user.email,
         fullName: user.full_name,
         providerName: user.provider_name,
+        role: user.role,
       },
       JWT_SECRET,
       { expiresIn: "7d" }
@@ -68,6 +70,7 @@ router.post(
           fullName: user.full_name,
           providerName: user.provider_name,
           contactNumber: user.contact_number ?? undefined,
+          role: user.role,
         },
       });
   })
@@ -85,6 +88,7 @@ router.get(
       email: string;
       fullName: string;
       providerName: string;
+      role: string;
     };
     try {
       payload = jwt.verify(token, JWT_SECRET) as typeof payload;
@@ -103,6 +107,7 @@ router.get(
         email: payload.email,
         fullName: payload.fullName,
         providerName: payload.providerName,
+        role: payload.role ?? 'provider',
       },
     });
   })

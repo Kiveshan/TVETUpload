@@ -20,6 +20,7 @@ function SessionCleaner({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (prevUser.current !== null && user === null) {
       clearFiles();
+      queryClient.clear();
     }
     prevUser.current = user;
   }, [user, clearFiles]);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import PortalLayout from '../../layouts/PortalLayout/PortalLayout';
 import Breadcrumb from '../../components/Breadcrumb/Breadcrumb';
 import PreviewModal from '../../components/PreviewModal/PreviewModal';
@@ -7,6 +8,7 @@ import { PATHS } from '../../routes/paths';
 import { api } from '../../lib/api';
 import { queryClient } from '../../lib/queryClient';
 import { useUploadFiles } from '../../context/UploadFilesContext';
+import { useAuth } from '../../auth/useAuth';
 import { BackArrowIcon, CheckmarkIcon, CheckIcon, BigCheckIcon, EyeIcon, TrashIcon } from './icons';
 import './SubmissionSummary.css';
 import './SubmissionModal.css';
@@ -52,8 +54,27 @@ function nowFormatted() {
 
 export default function SubmissionSummary() {
   const navigate         = useNavigate();
-  const provider         = loadProvider();
+  const { user }         = useAuth();
   const uploadState      = loadUploadState();
+
+  const isCollegeUser = user?.role === 'college';
+
+  const { data: providerInfo } = useQuery({
+    queryKey: ['auth', 'provider-info'],
+    queryFn: () => api.get<{ contactNumber: string | null }>('/auth/provider-info'),
+    enabled: isCollegeUser,
+  });
+
+  const savedProvider = loadProvider();
+  // For college users the provider form is never filled — fall back to auth data.
+  const provider: ProviderForm = savedProvider.provider
+    ? savedProvider
+    : {
+        provider:  user?.providerName  ?? '',
+        fullName:  user?.fullName      ?? '',
+        email:     user?.email         ?? '',
+        contact:   providerInfo?.contactNumber ?? user?.contactNumber ?? '',
+      };
   const { files: ctxFiles, clearFiles } = useUploadFiles();
 
   const [uploads, setUploads]         = useState<Record<string, StoredUpload>>(uploadState.uploads);
@@ -125,7 +146,7 @@ export default function SubmissionSummary() {
 
   return (
     <PortalLayout>
-      <Breadcrumb items={STEPS} activeStep={3} />
+      {!isCollegeUser && <Breadcrumb items={STEPS} activeStep={3} />}
 
       <div className="summaryPage">
         <div className="summaryHeader">

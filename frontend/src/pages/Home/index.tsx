@@ -16,7 +16,9 @@ export default function Home() {
 
   function handleLoginSuccess(user: AuthUser) {
     flushSync(() => { login(user); });
-    navigate(user.role === 'admin' ? PATHS.admin : PATHS.providerInformation);
+    if (user.role === 'admin') navigate(PATHS.admin);
+    else if (user.role === 'college') navigate(PATHS.collegeUpload);
+    else navigate(PATHS.providerInformation);
   }
 
   return (
@@ -32,9 +34,9 @@ export default function Home() {
             </span>
 
             <h1 className="title">
-              Upload TVET College
+              TVET College
               <br />
-              Data Securely
+              Secure Data Loader
             </h1>
 
             <p className="subtitle">

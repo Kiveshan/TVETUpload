@@ -22,7 +22,7 @@ function parseFileLocally(file: File, maxRows = 15): Promise<PreviewData> {
     reader.onload = (e) => {
       try {
         const buffer = e.target?.result as ArrayBuffer;
-        const workbook = XLSX.read(buffer, { type: 'array', cellDates: true, sheetRows: maxRows + 2 });
+        const workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
         const sheetName = workbook.SheetNames[0];
         if (!sheetName) { resolve({ headers: [], rows: [], totalRows: 0 }); return; }
         const sheet = workbook.Sheets[sheetName];

@@ -31,8 +31,9 @@ router.post(
       password: string;
       contact_number: string | null;
       role: string;
+      college_id: number | null;
     }>(
-      "SELECT user_id, email, full_name, provider_name, password, contact_number, role FROM users WHERE email = $1",
+      "SELECT user_id, email, full_name, provider_name, password, contact_number, role, college_id FROM users WHERE email = $1",
       [email.toLowerCase().trim()]
     );
 
@@ -51,6 +52,7 @@ router.post(
         fullName: user.full_name,
         providerName: user.provider_name,
         role: user.role,
+        ...(user.college_id != null && { collegeId: user.college_id }),
       },
       JWT_SECRET,
       { expiresIn: "7d" }
@@ -71,6 +73,7 @@ router.post(
           providerName: user.provider_name,
           contactNumber: user.contact_number ?? undefined,
           role: user.role,
+          ...(user.college_id != null && { collegeId: user.college_id }),
         },
       });
   })
@@ -89,6 +92,7 @@ router.get(
       fullName: string;
       providerName: string;
       role: string;
+      collegeId?: number;
     };
     try {
       payload = jwt.verify(token, JWT_SECRET) as typeof payload;
@@ -108,9 +112,23 @@ router.get(
         fullName: payload.fullName,
         providerName: payload.providerName,
         role: payload.role ?? 'provider',
+        ...(payload.collegeId != null && { collegeId: payload.collegeId }),
       },
     });
   })
+);
+
+router.get(
+  "/provider-info",
+  requireAuth,
+  asyncHandler(async (_req, res) => {
+    const user = res.locals.user;
+    const { rows } = await pool.query<{ contact_number: string | null }>(
+      "SELECT contact_number FROM users WHERE provider_name = $1 AND role = 'provider' LIMIT 1",
+      [user.providerName],
+    );
+    res.json({ contactNumber: rows[0]?.contact_number ?? null });
+  }),
 );
 
 router.patch(

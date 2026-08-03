@@ -93,3 +93,73 @@
   .uploadCardsGrid { grid-template-columns: 1fr; }
   .formSelect { width: 100%; }
 }
+
+/* ── All-uploaded lock modal ── */
+.allUploadedOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.allUploadedModal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2.5rem 2rem 2rem;
+  max-width: 440px;
+  width: calc(100% - 2rem);
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+}
+
+.allUploadedIconCircle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #0047a2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+}
+
+.allUploadedTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.75rem;
+}
+
+.allUploadedBody {
+  font-size: 0.9375rem;
+  color: #374151;
+  margin: 0 0 0.5rem;
+  line-height: 1.5;
+}
+
+.allUploadedHint {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0 0 1.75rem;
+  line-height: 1.5;
+}
+
+.allUploadedBtn {
+  padding: 0.625rem 1.75rem;
+  background: #0047a2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.allUploadedBtn:hover {
+  background: #003080;
+}

@@ -1,8 +1,14 @@
 import { Router } from 'express';
 import { requireAuth } from '../../middleware/auth';
 import { asyncHandler } from '../../middleware/asyncHandler';
-import { pool } from '../../lib/db';
-import { getAllColleges, getAvailableColleges, getSubmittedColleges } from './colleges.service';
+import { HttpError } from '../../lib/httpError';
+import {
+  getAllColleges,
+  getAvailableColleges,
+  getAvailableCollegeForUser,
+  getSubmittedColleges,
+  getSubmittedCollegesForUser,
+} from './colleges.service';
 
 const router = Router();
 
@@ -19,7 +25,16 @@ router.get(
   '/available',
   requireAuth,
   asyncHandler(async (_req, res) => {
-    const colleges = await getAvailableColleges();
+    const user = res.locals.user;
+
+    if (user.role === 'college') {
+      if (!user.collegeId) throw new HttpError(400, 'College account has no college_id');
+      const colleges = await getAvailableCollegeForUser(user.collegeId);
+      res.json({ colleges });
+      return;
+    }
+
+    const colleges = await getAvailableColleges(user.providerName);
     res.json({ colleges });
   }),
 );
@@ -27,14 +42,17 @@ router.get(
 router.get(
   '/submitted',
   requireAuth,
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (_req, res) => {
     const user = res.locals.user;
-    const { rows } = await pool.query<{ provider_name: string }>(
-      'SELECT provider_name FROM users WHERE user_id = $1',
-      [user.userId],
-    );
-    const providerName = rows[0]?.provider_name ?? '';
-    const colleges = await getSubmittedColleges(providerName);
+
+    if (user.role === 'college') {
+      if (!user.collegeId) throw new HttpError(400, 'College account has no college_id');
+      const colleges = await getSubmittedCollegesForUser(user.providerName, user.collegeId);
+      res.json({ colleges });
+      return;
+    }
+
+    const colleges = await getSubmittedColleges(user.providerName);
     res.json({ colleges });
   }),
 );

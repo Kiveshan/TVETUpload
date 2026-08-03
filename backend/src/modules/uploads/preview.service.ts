@@ -14,7 +14,7 @@ export function generatePreview(
   let workbook: XLSX.WorkBook;
 
   try {
-    workbook = XLSX.read(buffer, { type: 'buffer', cellDates: true, sheetRows: maxRows + 2 });
+    workbook = XLSX.read(buffer, { type: 'buffer', cellDates: true });
   } catch {
     return { headers: [], rows: [], totalRows: 0 };
   }

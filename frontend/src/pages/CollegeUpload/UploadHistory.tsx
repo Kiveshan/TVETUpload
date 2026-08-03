@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useRef, useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import PreviewModal from '../../components/PreviewModal/PreviewModal';
 import ReuploadRequestModal from './ReuploadRequestModal';
@@ -45,12 +45,26 @@ function ReuploadIcon() {
   );
 }
 
+function PlusIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  );
+}
 
 export default function UploadHistory({ collegeId }: Props) {
+  const queryClient = useQueryClient();
   const { data: documents = [], isLoading } = useCollegeHistory(collegeId);
-  const [tooltip, setTooltip]   = useState<TooltipPos | null>(null);
+  const [tooltip, setTooltip]       = useState<TooltipPos | null>(null);
   const [previewDoc, setPreviewDoc] = useState<HistoryDocument | null>(null);
   const [reuploadDoc, setReuploadDoc] = useState<HistoryDocument | null>(null);
+
+  const [uploadingHeadcount, setUploadingHeadcount] = useState(false);
+  const [headcountError, setHeadcountError]         = useState<string | null>(null);
+  const headcountInputRef = useRef<HTMLInputElement>(null);
+
+  const hasHeadcount = documents.some((d) => d.s3_key.includes('/head_count_enrollment/'));
 
   useEffect(() => {
     if (!tooltip) return;
@@ -61,6 +75,24 @@ export default function UploadHistory({ collegeId }: Props) {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [tooltip]);
+
+  async function handleHeadcountFile(files: FileList | null) {
+    const file = files?.[0];
+    if (!file || !collegeId) return;
+    setUploadingHeadcount(true);
+    setHeadcountError(null);
+    try {
+      const formData = new FormData();
+      formData.append('headcount', file);
+      await api.postUpload(`/uploads/headcount/${collegeId}`, formData);
+      await queryClient.invalidateQueries({ queryKey: ['uploads', 'history', collegeId] });
+    } catch (err) {
+      setHeadcountError(err instanceof Error ? err.message : 'Upload failed. Please try again.');
+    } finally {
+      setUploadingHeadcount(false);
+      if (headcountInputRef.current) headcountInputRef.current.value = '';
+    }
+  }
 
   if (!collegeId) {
     return (
@@ -124,9 +156,45 @@ export default function UploadHistory({ collegeId }: Props) {
                   </td>
                 </tr>
               ))}
+
+              {!hasHeadcount && (
+                <tr className="headcountUploadRow">
+                  <td className="docName" style={{ color: '#6b7280' }}>Head Count Enrollment 2025</td>
+                  <td className="fileName" style={{ color: '#9ca3af' }}>Not uploaded</td>
+                  <td><span className="statusBadge statusBadge--pending">⏱ Pending</span></td>
+                  <td>
+                    <div className="actionsCell">
+                      <button
+                        className="headcountUploadBtn"
+                        title="Upload Head Count Enrollment"
+                        aria-label="Upload Head Count Enrollment"
+                        disabled={uploadingHeadcount}
+                        onClick={() => headcountInputRef.current?.click()}
+                      >
+                        {uploadingHeadcount ? (
+                          <span className="headcountSpinner" />
+                        ) : (
+                          <><PlusIcon /> Upload Headcount</>
+                        )}
+                      </button>
+                      <input
+                        ref={headcountInputRef}
+                        type="file"
+                        accept=".xlsx,.csv"
+                        style={{ display: 'none' }}
+                        onChange={(e) => handleHeadcountFile(e.target.files)}
+                      />
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
+
+        {headcountError && (
+          <p style={{ color: '#dc2626', fontSize: '0.875rem', marginTop: '0.75rem' }}>{headcountError}</p>
+        )}
       </div>
 
       {tooltip && (

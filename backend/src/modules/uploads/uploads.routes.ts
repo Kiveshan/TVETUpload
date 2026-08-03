@@ -37,6 +37,10 @@ router.post(
     const parsedId = parseInt(collegeId, 10);
     if (isNaN(parsedId)) throw new HttpError(400, 'Invalid collegeId');
 
+    if (user.role === 'college' && user.collegeId !== parsedId) {
+      throw new HttpError(403, 'College accounts may only upload for their own college');
+    }
+
     const { rows: collegeRows } = await pool.query<{ college_id: number; college_name: string }>(
       'SELECT college_id, college_name FROM college WHERE college_id = $1',
       [parsedId],
@@ -95,6 +99,55 @@ router.post(
   }),
 );
 
+router.post(
+  '/headcount/:collegeId',
+  requireAuth,
+  upload.single('headcount'),
+  asyncHandler(async (req, res) => {
+    const user = res.locals.user;
+    const collegeId = parseInt(String(req.params.collegeId), 10);
+    if (isNaN(collegeId)) throw new HttpError(400, 'Invalid collegeId');
+
+    if (user.role === 'college' && user.collegeId !== collegeId) {
+      throw new HttpError(403, 'College accounts may only upload for their own college');
+    }
+
+    const file = req.file;
+    if (!file) throw new HttpError(400, 'No file uploaded');
+    if (!file.originalname.match(/\.(xlsx|csv)$/i)) {
+      throw new HttpError(400, 'Only .xlsx and .csv files are accepted');
+    }
+
+    const { rows: collegeRows } = await pool.query<{ college_name: string }>(
+      'SELECT college_name FROM college WHERE college_id = $1',
+      [collegeId],
+    );
+    if (!collegeRows.length) throw new HttpError(404, 'College not found');
+
+    // Ensure the college has already completed the required upload
+    const providerName = await resolveProvider(user.userId);
+    const existing = await getUploadsByCollege(providerName, collegeId);
+    if (!existing.length) {
+      throw new HttpError(400, 'College must complete the initial upload before adding headcount');
+    }
+
+    // Block if headcount already exists — use re-upload instead
+    const alreadyHasHeadcount = existing.some((u) =>
+      u.s3_bucket_link.includes('/head_count_enrollment/'),
+    );
+    if (alreadyHasHeadcount) {
+      throw new HttpError(409, 'Headcount already uploaded — use re-upload to replace it');
+    }
+
+    const ct = resolveContentType(file.originalname);
+    const key = buildKey(providerName, collegeRows[0].college_name, FOLDER_MAP['headcount'], file.originalname);
+    await uploadToS3(key, file.buffer, ct);
+    await saveUploadBatch(user.userId, collegeId, [key]);
+
+    res.status(201).json({ message: 'Headcount uploaded successfully', s3Key: key });
+  }),
+);
+
 router.get(
   '/history/:collegeId',
   requireAuth,
@@ -102,6 +155,10 @@ router.get(
     const user = res.locals.user;
     const collegeId = parseInt(String(req.params.collegeId), 10);
     if (isNaN(collegeId)) throw new HttpError(400, 'Invalid collegeId');
+
+    if (user.role === 'college' && user.collegeId !== collegeId) {
+      throw new HttpError(403, 'College accounts may only view history for their own college');
+    }
 
     const providerName = await resolveProvider(user.userId);
     const uploads = await getUploadsByCollege(providerName, collegeId);

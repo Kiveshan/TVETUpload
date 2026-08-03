@@ -26,9 +26,9 @@
 }
 
 .docsTable th:nth-child(1) { width: 28%; }
-.docsTable th:nth-child(2) { width: 44%; }
+.docsTable th:nth-child(2) { width: 36%; }
 .docsTable th:nth-child(3) { width: 16%; }
-.docsTable th:nth-child(4) { width: 12%; }
+.docsTable th:nth-child(4) { width: 20%; }
 
 .docsTable thead tr {
   background: #F4F8FA;
@@ -54,6 +54,12 @@
   vertical-align: middle;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Actions column never clips its content */
+.docsTable td:last-child {
+  overflow: visible;
   white-space: nowrap;
 }
 
@@ -178,4 +184,60 @@
 
 .sendRequestBtn:hover {
   background: #003080;
+}
+
+/* ── Headcount upload button ── */
+.statusBadge--pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.headcountUploadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.375rem 0.875rem;
+  background: #0047a2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.headcountUploadBtn:hover:not(:disabled) {
+  background: #003080;
+}
+
+.headcountUploadBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.headcountSpinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: hcSpin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes hcSpin {
+  to { transform: rotate(360deg); }
+}
+
+.headcountUploadRow td {
+  background: #fafafa;
 }

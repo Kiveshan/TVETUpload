@@ -5,4 +5,5 @@ export interface AuthUser {
   providerName: string;
   contactNumber?: string;
   role: string;
+  collegeId?: number;
 }

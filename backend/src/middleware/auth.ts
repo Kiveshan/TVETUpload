@@ -9,6 +9,7 @@ export interface AuthUser {
   fullName: string;
   providerName: string;
   role: string;
+  collegeId?: number;
 }
 
 declare global {

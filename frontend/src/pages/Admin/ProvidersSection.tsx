@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { getMissing, pct, barColor, lastSubmission } from './adminHelpers';
+import { pct, barColor, lastSubmission } from './adminHelpers';
 import { TOTAL_FOLDERS } from './adminTypes';
-import { IconWarning, IconChevronRight } from './AdminIcons';
+import { PROVIDER_TOTALS } from './adminProviderMap';
+import { IconChevronRight } from './AdminIcons';
 import { ProgressBar } from './StatsCards';
 import FileModal from './FileModal';
 import type { Provider, ProviderCollege } from './adminTypes';
@@ -11,6 +12,8 @@ function ProviderTile({
 }: { provider: Provider; selected: boolean; onClick: () => void }) {
   const totalFiles = provider.colleges.reduce((s, c) => s + c.files.length, 0);
   const hasData = provider.colleges.length > 0;
+  const totalColleges = PROVIDER_TOTALS[provider.providerName] ?? provider.colleges.length;
+  const uploadedColleges = provider.colleges.length;
 
   return (
     <button
@@ -21,8 +24,8 @@ function ProviderTile({
       <div className="providerTile__name">{provider.providerName}</div>
       <div className="providerTile__stats">
         <span className="providerTile__stat">
-          <strong>{provider.colleges.length}</strong>
-          <span>college{provider.colleges.length !== 1 ? 's' : ''}</span>
+          <strong>{uploadedColleges} of {totalColleges}</strong>
+          <span>college{totalColleges !== 1 ? 's' : ''}</span>
         </span>
         <span className="providerTile__divider" />
         <span className="providerTile__stat">
@@ -57,14 +60,12 @@ function ProviderCollegeTable({ provider }: { provider: Provider }) {
               <th>College</th>
               <th>Submission Progress</th>
               <th>Files</th>
-              <th>Missing</th>
               <th>Last Submission</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {provider.colleges.map((college) => {
-              const missing = getMissing(college.files);
               const collegePct = pct(college.files.length, TOTAL_FOLDERS);
               return (
                 <tr key={college.collegeId}>
@@ -76,11 +77,6 @@ function ProviderCollegeTable({ provider }: { provider: Provider }) {
                     </div>
                   </td>
                   <td>{college.files.length}</td>
-                  <td>
-                    {missing.length === 0
-                      ? <span className="badge badge--none">&#10003; None</span>
-                      : <span className="badge badge--missing"><IconWarning /> {missing.length}</span>}
-                  </td>
                   <td>{lastSubmission(college.files)}</td>
                   <td>
                     <button className="viewLink" onClick={() => setFileModal(college)}>

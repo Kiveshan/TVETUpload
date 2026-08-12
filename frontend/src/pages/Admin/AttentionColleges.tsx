@@ -1,23 +1,41 @@
 import { useState, useMemo } from 'react';
 import { IconAlert, IconChevronDown, IconSearch, IconBuilding } from './AdminIcons';
+import { getProviderForCollege } from './adminProviderMap';
 
 interface College { college_id: number; college_name: string; }
 
 export default function AttentionColleges({ colleges }: { colleges: College[] }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [sort, setSort] = useState<'asc' | 'desc'>('asc');
 
-  const filtered = useMemo(() => {
+  const grouped = useMemo(() => {
     const q = search.toLowerCase();
-    return [...colleges]
-      .filter((c) => c.college_name.toLowerCase().includes(q))
-      .sort((a, b) =>
-        sort === 'asc'
-          ? a.college_name.localeCompare(b.college_name)
-          : b.college_name.localeCompare(a.college_name),
-      );
-  }, [colleges, search, sort]);
+    // First group everything, then filter: keep providers whose name matches OR colleges whose name matches
+    const map: Record<string, College[]> = {};
+    for (const c of colleges) {
+      const provider = getProviderForCollege(c.college_name) ?? 'Other';
+      if (!map[provider]) map[provider] = [];
+      map[provider].push(c);
+    }
+    // Sort colleges within each group A-Z
+    for (const key of Object.keys(map)) {
+      map[key].sort((a, b) => a.college_name.localeCompare(b.college_name));
+    }
+    if (!q) return map;
+    // Filter: if provider name matches → show all its colleges; else show only matching colleges
+    const result: Record<string, College[]> = {};
+    for (const [provider, list] of Object.entries(map)) {
+      if (provider.toLowerCase().includes(q)) {
+        result[provider] = list; // whole group
+      } else {
+        const matched = list.filter((c) => c.college_name.toLowerCase().includes(q));
+        if (matched.length) result[provider] = matched;
+      }
+    }
+    return result;
+  }, [colleges, search]);
+
+  const totalFiltered = Object.values(grouped).reduce((s, arr) => s + arr.length, 0);
 
   return (
     <div className="adminSection">
@@ -49,25 +67,27 @@ export default function AttentionColleges({ colleges }: { colleges: College[] })
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <select
-                className="filterSelect"
-                value={sort}
-                onChange={(e) => setSort(e.target.value as 'asc' | 'desc')}
-              >
-                <option value="asc">Sort A–Z</option>
-                <option value="desc">Sort Z–A</option>
-              </select>
             </div>
-            {filtered.length === 0 ? (
+
+            {totalFiltered === 0 ? (
               <div className="adminEmpty">No colleges match your search.</div>
             ) : (
-              filtered.map((c) => (
-                <div key={c.college_id} className="attentionRow">
-                  <div className="attentionRow__icon"><IconBuilding /></div>
-                  <div className="attentionRow__info">
-                    <span className="attentionRow__name">{c.college_name}</span>
-                    <span className="badge badge--noUploads">No uploads</span>
+              Object.entries(grouped).map(([provider, list]) => (
+                <div key={provider} className="attentionProviderGroup">
+                  <div className="attentionProviderGroup__header">
+                    <span className="attentionProviderGroup__name">{provider}</span>
+                    <span className="attentionProviderGroup__count">
+                      {list.length} not uploaded
+                    </span>
                   </div>
+                  {list.map((c) => (
+                    <div key={c.college_id} className="attentionRow">
+                      <div className="attentionRow__icon"><IconBuilding /></div>
+                      <div className="attentionRow__info">
+                        <span className="attentionRow__name">{c.college_name}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ))
             )}

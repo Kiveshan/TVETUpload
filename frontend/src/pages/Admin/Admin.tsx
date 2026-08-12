@@ -1,14 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../auth/useAuth';
 import Nav from '../../components/Nav/Nav';
 import Footer from '../../components/Footer/Footer';
 import StatsCards from './StatsCards';
-import DocumentProgress from './DocumentProgress';
 import AttentionColleges from './AttentionColleges';
 import ProvidersSection from './ProvidersSection';
-import { apiFetch, exportCSV } from './adminHelpers';
+import CollegeDirectoryModal from './CollegeDirectoryModal';
+import { apiFetch, exportPDF } from './adminHelpers';
 import { IconDownload, IconLogout } from './AdminIcons';
 import type { AdminStats, Provider } from './adminTypes';
 import './Admin.css';
@@ -19,6 +19,7 @@ import '../../layouts/PortalLayout/PortalLayout.css';
 export default function Admin() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [showDirectory, setShowDirectory] = useState(false);
 
   useEffect(() => {
     if (!user) { navigate('/', { replace: true }); return; }
@@ -71,8 +72,8 @@ export default function Admin() {
           </div>
           <div className="adminPageHeader__actions">
             {providers.length > 0 && (
-              <button className="btnPrimary" onClick={() => exportCSV(providers)}>
-                <IconDownload /> Export summary
+              <button className="btnPrimary" onClick={() => { void exportPDF(providers, stats?.neverUploadedColleges ?? []); }}>
+                <IconDownload /> Export PDF Summary
               </button>
             )}
           </div>
@@ -82,8 +83,7 @@ export default function Admin() {
           <div className="adminLoading">Loading dashboard…</div>
         ) : stats ? (
           <>
-            <StatsCards stats={stats} />
-            <DocumentProgress stats={stats} providers={providers} />
+            <StatsCards stats={stats} onTotalClick={() => setShowDirectory(true)} />
             {stats.neverUploadedColleges.length > 0 && (
               <AttentionColleges colleges={stats.neverUploadedColleges} />
             )}
@@ -92,6 +92,7 @@ export default function Admin() {
         ) : null}
       </main>
       <Footer />
+      {showDirectory && <CollegeDirectoryModal onClose={() => setShowDirectory(false)} />}
     </div>
   );
 }

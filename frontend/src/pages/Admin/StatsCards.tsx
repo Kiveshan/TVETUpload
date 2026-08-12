@@ -11,17 +11,18 @@ export function ProgressBar({ value, color, height = 6 }: { value: number; color
   );
 }
 
-export default function StatsCards({ stats }: { stats: AdminStats }) {
+export default function StatsCards({ stats, onTotalClick }: { stats: AdminStats; onTotalClick?: () => void }) {
   const uploadedPct = pct(stats.collegesUploaded, stats.totalColleges);
   return (
     <div className="statsGrid">
-      <div className="statCard">
+      <button className="statCard statCard--clickable" onClick={onTotalClick}>
         <span className="statCard__label">Total Colleges</span>
         <div className="statCard__row">
           <span className="statCard__val">{stats.totalColleges}</span>
           <span className="statCard__icon statCard__icon--grey"><IconBuilding /></span>
         </div>
-      </div>
+        <span className="statCard__sub statCard__sub--link">View directory</span>
+      </button>
 
       <div className="statCard">
         <span className="statCard__label">Colleges Uploaded</span>

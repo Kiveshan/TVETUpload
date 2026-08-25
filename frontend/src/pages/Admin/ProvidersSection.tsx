@@ -7,6 +7,9 @@ import { ProgressBar } from './StatsCards';
 import FileModal from './FileModal';
 import type { Provider, ProviderCollege } from './adminTypes';
 
+const YEARS = ['2025', '2026'] as const;
+type Year = typeof YEARS[number];
+
 function ProviderTile({
   provider, selected, onClick,
 }: { provider: Provider; selected: boolean; onClick: () => void }) {
@@ -38,34 +41,43 @@ function ProviderTile({
   );
 }
 
-function ProviderCollegeTable({ provider }: { provider: Provider }) {
-  const [fileModal, setFileModal] = useState<ProviderCollege | null>(null);
+interface ModalState { college: ProviderCollege; year: Year; }
 
-  if (provider.colleges.length === 0) {
-    return (
-      <div className="providerDetail">
-        <div className="adminEmpty">
-          No colleges have submitted files under <strong>{provider.providerName}</strong> yet.
-        </div>
-      </div>
-    );
-  }
+function YearCollegePanel({
+  year, colleges, onView,
+}: {
+  year: Year;
+  colleges: ProviderCollege[];
+  onView: (college: ProviderCollege, year: Year) => void;
+}) {
+  // Colleges that have at least one file for this year
+  const yearColleges = colleges
+    .map((c) => ({ ...c, files: c.files.filter((f) => f.year === year) }))
+    .filter((c) => c.files.length > 0);
 
   return (
-    <div className="providerDetail">
-      <div className="collegeTableWrap">
+    <div className="yearPanel">
+      <div className="yearPanel__header">
+        <span className="yearPanel__badge">{year}</span>
+        <span className="yearPanel__count">
+          {yearColleges.length} college{yearColleges.length !== 1 ? 's' : ''}
+        </span>
+      </div>
+      {yearColleges.length === 0 ? (
+        <div className="yearPanel__empty">No submissions for {year}</div>
+      ) : (
         <table className="collegeTable">
           <thead>
             <tr>
               <th>College</th>
-              <th>Submission Progress</th>
+              <th>Progress</th>
               <th>Files</th>
               <th>Last Submission</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {provider.colleges.map((college) => {
+            {yearColleges.map((college) => {
               const collegePct = pct(college.files.length, TOTAL_FOLDERS);
               return (
                 <tr key={college.collegeId}>
@@ -79,7 +91,7 @@ function ProviderCollegeTable({ provider }: { provider: Provider }) {
                   <td>{college.files.length}</td>
                   <td>{lastSubmission(college.files)}</td>
                   <td>
-                    <button className="viewLink" onClick={() => setFileModal(college)}>
+                    <button className="viewLink" onClick={() => onView(college, year)}>
                       View files <IconChevronRight />
                     </button>
                   </td>
@@ -88,9 +100,43 @@ function ProviderCollegeTable({ provider }: { provider: Provider }) {
             })}
           </tbody>
         </table>
+      )}
+    </div>
+  );
+}
+
+function ProviderYearSplit({ provider }: { provider: Provider }) {
+  const [modal, setModal] = useState<ModalState | null>(null);
+
+  if (provider.colleges.length === 0) {
+    return (
+      <div className="providerDetail">
+        <div className="adminEmpty">
+          No colleges have submitted files under <strong>{provider.providerName}</strong> yet.
+        </div>
       </div>
-      {fileModal && (
-        <FileModal college={fileModal} provider={provider.providerName} onClose={() => setFileModal(null)} />
+    );
+  }
+
+  return (
+    <div className="providerDetail">
+      <div className="yearSplitRow">
+        {YEARS.map((year) => (
+          <YearCollegePanel
+            key={year}
+            year={year}
+            colleges={provider.colleges}
+            onView={(college, y) => setModal({ college, year: y })}
+          />
+        ))}
+      </div>
+      {modal && (
+        <FileModal
+          college={modal.college}
+          provider={provider.providerName}
+          year={modal.year}
+          onClose={() => setModal(null)}
+        />
       )}
     </div>
   );
@@ -107,7 +153,7 @@ export default function ProvidersSection({ providers }: { providers: Provider[] 
       <div className="adminSection__header">
         <div>
           <h2 className="adminSection__title">Providers and College Submissions</h2>
-          <p className="adminSection__sub">Select a provider to view its college submissions.</p>
+          <p className="adminSection__sub">Select a provider to view its college submissions by year.</p>
         </div>
       </div>
       <div className="providerGrid">
@@ -121,7 +167,7 @@ export default function ProvidersSection({ providers }: { providers: Provider[] 
         ))}
       </div>
       {selectedProvider && (
-        <ProviderCollegeTable key={selectedProvider.providerName} provider={selectedProvider} />
+        <ProviderYearSplit key={selectedProvider.providerName} provider={selectedProvider} />
       )}
     </div>
   );

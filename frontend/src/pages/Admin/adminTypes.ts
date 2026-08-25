@@ -27,6 +27,7 @@ export interface UploadFile {
   label: string;
   fileName: string;
   s3Key: string;
+  year: string;
   createdAt: string;
   reuploadsCount: number;
 }

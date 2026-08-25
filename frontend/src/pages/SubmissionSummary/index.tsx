@@ -20,31 +20,47 @@ const STEPS = [
 ];
 
 interface ProviderForm { provider: string; fullName: string; email: string; contact: string; }
-interface StoredUpload { fileName: string; uploadedAt: string; }
-interface StoredUploadState { selectedCollege: string; selectedCollegeName: string; uploads: Record<string, StoredUpload>; }
+interface StoredEntry { fileName: string; uploadedAt: string; }
+interface StoredUploadState {
+  selectedCollege: string;
+  selectedCollegeName: string;
+  selectedYear: string;
+  uploadsByYear: Record<string, Record<string, StoredEntry>>;
+}
 
 const DOC_LABELS: Record<string, string> = {
   collegeInfo: 'College Information',
   programme:   'Programme, Subject & Qualifications',
   student:     'Student Data',
-  headcount:   'Head Count Enrollment 2025',
+  headcount:   'Head Count Enrollment',
   staff:       'Staff Data',
 };
 const DOC_ORDER     = ['collegeInfo', 'programme', 'student', 'headcount', 'staff'];
 const REQUIRED_KEYS = new Set(['collegeInfo', 'programme', 'student', 'staff']);
 
 function loadProvider(): ProviderForm {
-  try { const r = sessionStorage.getItem('tvet_provider_form'); if (r) return JSON.parse(r); } catch { /* ignore parse errors */ }
+  try { const r = sessionStorage.getItem('tvet_provider_form'); if (r) return JSON.parse(r); } catch { /* ignore */ }
   return { provider: '', fullName: '', email: '', contact: '' };
 }
 
 function loadUploadState(): StoredUploadState {
-  try { const r = sessionStorage.getItem('tvet_college_upload'); if (r) return JSON.parse(r); } catch { /* ignore parse errors */ }
-  return { selectedCollege: '', selectedCollegeName: '', uploads: {} };
+  try { const r = sessionStorage.getItem('tvet_college_upload'); if (r) return JSON.parse(r); } catch { /* ignore */ }
+  return { selectedCollege: '', selectedCollegeName: '', selectedYear: '', uploadsByYear: {} };
 }
 
-function clearUploadState() {
-  sessionStorage.setItem('tvet_college_upload', JSON.stringify({ selectedCollege: '', selectedCollegeName: '', uploads: {} }));
+// After a successful submit: remove only the submitted year's data and reset year selection.
+// Files for the other year are preserved so the user can submit them next.
+function clearSubmittedYear(year: string) {
+  try {
+    const stored = loadUploadState();
+    const updatedByYear = { ...stored.uploadsByYear };
+    delete updatedByYear[year];
+    sessionStorage.setItem('tvet_college_upload', JSON.stringify({
+      ...stored,
+      selectedYear: '',
+      uploadsByYear: updatedByYear,
+    }));
+  } catch { /* ignore */ }
 }
 
 function nowFormatted() {
@@ -53,9 +69,11 @@ function nowFormatted() {
 }
 
 export default function SubmissionSummary() {
-  const navigate         = useNavigate();
-  const { user }         = useAuth();
-  const uploadState      = loadUploadState();
+  const navigate    = useNavigate();
+  const { user }    = useAuth();
+  const uploadState = loadUploadState();
+  const year        = uploadState.selectedYear;
+  const yearUploads = uploadState.uploadsByYear?.[year] ?? {};
 
   const isCollegeUser = user?.role === 'college';
 
@@ -66,7 +84,6 @@ export default function SubmissionSummary() {
   });
 
   const savedProvider = loadProvider();
-  // For college users the provider form is never filled — fall back to auth data.
   const provider: ProviderForm = savedProvider.provider
     ? savedProvider
     : {
@@ -75,27 +92,37 @@ export default function SubmissionSummary() {
         email:     user?.email         ?? '',
         contact:   providerInfo?.contactNumber ?? user?.contactNumber ?? '',
       };
-  const { files: ctxFiles, clearFiles } = useUploadFiles();
 
-  const [uploads, setUploads]         = useState<Record<string, StoredUpload>>(uploadState.uploads);
-  const [confirmed, setConfirmed]     = useState(false);
-  const [submitting, setSubmitting]   = useState(false);
+  const { getFiles, removeFile, clearFilesForYear } = useUploadFiles();
+  const ctxFiles = getFiles(year);
+
+  const [uploads, setUploads]               = useState<Record<string, StoredEntry>>(yearUploads);
+  const [confirmed, setConfirmed]           = useState(false);
+  const [submitting, setSubmitting]         = useState(false);
   const [submitProgress, setSubmitProgress] = useState(0);
-  const [submitted, setSubmitted]     = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submissionDate]              = useState(nowFormatted);
-  const [previewKey, setPreviewKey]   = useState<string | null>(null);
+  const [submitted, setSubmitted]           = useState(false);
+  const [submitError, setSubmitError]       = useState<string | null>(null);
+  const [submissionDate]                    = useState(nowFormatted);
+  const [previewKey, setPreviewKey]         = useState<string | null>(null);
 
   const allRequiredPresent = [...REQUIRED_KEYS].every((k) => !!uploads[k]);
-  const hasFiles = Object.keys(ctxFiles).length > 0;
-  const canConfirm = allRequiredPresent && confirmed && hasFiles && !submitting;
+  const hasFiles           = Object.keys(ctxFiles).length > 0;
+  const canConfirm         = allRequiredPresent && confirmed && hasFiles && !submitting;
 
   function handleDelete(key: string) {
     const updated = { ...uploads };
     delete updated[key];
+
+    // Persist the deletion into the correct year bucket in session storage
     const stored = loadUploadState();
-    stored.uploads = updated;
-    sessionStorage.setItem('tvet_college_upload', JSON.stringify(stored));
+    const updatedByYear = { ...stored.uploadsByYear };
+    if (updatedByYear[year]) {
+      updatedByYear[year] = { ...updatedByYear[year] };
+      delete updatedByYear[year][key];
+    }
+    sessionStorage.setItem('tvet_college_upload', JSON.stringify({ ...stored, uploadsByYear: updatedByYear }));
+    removeFile(year, key);
+
     if (REQUIRED_KEYS.has(key)) {
       navigate(PATHS.collegeUpload);
     } else {
@@ -111,6 +138,7 @@ export default function SubmissionSummary() {
     try {
       const formData = new FormData();
       formData.append('collegeId', uploadState.selectedCollege);
+      formData.append('year', year || '2025');
       for (const [key, file] of Object.entries(ctxFiles)) {
         formData.append(key, file);
       }
@@ -128,13 +156,18 @@ export default function SubmissionSummary() {
 
   const totalUploadBytes = Object.values(ctxFiles).reduce((sum, f) => sum + f.size, 0);
   const uploadedMb = ((submitProgress * totalUploadBytes) / (1024 * 1024)).toFixed(1);
-  const totalMb = (totalUploadBytes / (1024 * 1024)).toFixed(1);
+  const totalMb    = (totalUploadBytes / (1024 * 1024)).toFixed(1);
 
   useEffect(() => {
     if (!submitted) return;
-    const timer = setTimeout(() => { clearUploadState(); clearFiles(); navigate(PATHS.collegeUpload); }, 5000);
+    // Only clear the submitted year — other years' data stays intact
+    const timer = setTimeout(() => {
+      clearSubmittedYear(year);
+      clearFilesForYear(year);
+      navigate(PATHS.collegeUpload);
+    }, 5000);
     return () => clearTimeout(timer);
-  }, [submitted, navigate, clearFiles]);
+  }, [submitted, year, navigate, clearFilesForYear]);
 
   useEffect(() => {
     if (!hasFiles && allRequiredPresent) {
@@ -171,6 +204,7 @@ export default function SubmissionSummary() {
             <table className="summaryInfoTable">
               <tbody>
                 <tr><th>Selected College</th><td>{uploadState.selectedCollegeName || '—'}</td></tr>
+                <tr><th>Upload Year</th><td>{year || '—'}</td></tr>
               </tbody>
             </table>
           </div>
@@ -208,7 +242,6 @@ export default function SubmissionSummary() {
             </table>
           </div>
         </div>
-
 
         {submitError && <p style={{ color: '#dc2626', fontSize: '0.875rem', margin: '0.5rem 0' }}>{submitError}</p>}
 
@@ -256,9 +289,15 @@ export default function SubmissionSummary() {
                   <span className="modalSummaryValue">{uploadState.selectedCollegeName || '—'}</span>
                 </div>
               </div>
-              <div className="modalSummaryItem">
-                <span className="modalSummaryLabel">Submission Date</span>
-                <span className="modalSummaryValue">{submissionDate}</span>
+              <div className="modalSummaryTopRow">
+                <div className="modalSummaryItem">
+                  <span className="modalSummaryLabel">Upload Year</span>
+                  <span className="modalSummaryValue">{year || '—'}</span>
+                </div>
+                <div className="modalSummaryItem">
+                  <span className="modalSummaryLabel">Submission Date</span>
+                  <span className="modalSummaryValue">{submissionDate}</span>
+                </div>
               </div>
             </div>
             <p className="modalRedirectNote">Redirecting you in 5 seconds…</p>

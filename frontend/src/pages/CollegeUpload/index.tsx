@@ -28,24 +28,43 @@ const DOCUMENT_TYPES = [
   { key: 'programme',  label: 'Programme, Subject & Qualifications', required: true  },
   { key: 'student',    label: 'Student Data',                        required: true  },
   { key: 'staff',      label: 'Staff Data',                          required: true  },
-  { key: 'headcount',  label: 'Head Count Enrollment 2025',           required: false },
+  { key: 'headcount',  label: 'Head Count Enrollment',               required: false },
 ];
 
+const YEARS = ['2025', '2026'] as const;
+type Year = typeof YEARS[number];
+
 interface UploadEntry { fileName: string; uploadedAt: Date; }
-interface StoredState  { selectedCollege: string; selectedCollegeName: string; uploads: Record<string, { fileName: string; uploadedAt: string }>; }
+interface StoredEntry { fileName: string; uploadedAt: string; }
+interface StoredState {
+  selectedCollege: string;
+  selectedCollegeName: string;
+  selectedYear: string;
+  uploadsByYear: Record<string, Record<string, StoredEntry>>;
+}
 const UPLOAD_STORAGE_KEY = 'tvet_college_upload';
 
 function loadSaved() {
   try {
     const raw = sessionStorage.getItem(UPLOAD_STORAGE_KEY);
-    if (!raw) return { selectedCollege: '', selectedCollegeName: '', uploads: {} as Record<string, UploadEntry> };
+    if (!raw) return { selectedCollege: '', selectedCollegeName: '', selectedYear: '', uploadsByYear: {} as Record<string, Record<string, UploadEntry>> };
     const stored: StoredState = JSON.parse(raw);
-    const uploads: Record<string, UploadEntry> = {};
-    for (const [k, v] of Object.entries(stored.uploads)) {
-      uploads[k] = { fileName: v.fileName, uploadedAt: new Date(v.uploadedAt) };
+    const uploadsByYear: Record<string, Record<string, UploadEntry>> = {};
+    for (const [year, docs] of Object.entries(stored.uploadsByYear ?? {})) {
+      uploadsByYear[year] = {};
+      for (const [k, v] of Object.entries(docs)) {
+        uploadsByYear[year][k] = { fileName: v.fileName, uploadedAt: new Date(v.uploadedAt) };
+      }
     }
-    return { selectedCollege: stored.selectedCollege, selectedCollegeName: stored.selectedCollegeName ?? '', uploads };
-  } catch { return { selectedCollege: '', selectedCollegeName: '', uploads: {} as Record<string, UploadEntry> }; }
+    return {
+      selectedCollege: stored.selectedCollege ?? '',
+      selectedCollegeName: stored.selectedCollegeName ?? '',
+      selectedYear: stored.selectedYear ?? '',
+      uploadsByYear,
+    };
+  } catch {
+    return { selectedCollege: '', selectedCollegeName: '', selectedYear: '', uploadsByYear: {} as Record<string, Record<string, UploadEntry>> };
+  }
 }
 
 function formatDate(d: Date) {
@@ -63,18 +82,18 @@ export default function CollegeUpload() {
   const saved   = loadSaved();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { files: ctxFiles, setFile, removeFile } = useUploadFiles();
+  const { getFiles, setFile, removeFile } = useUploadFiles();
 
   const isCollegeUser = user?.role === 'college';
 
-  // Raw controlled state — college users have some of these overridden by derived values below.
   const [activeTab, setActiveTab]             = useState<Tab>('new');
   const [selectedCollege, setSelectedCollege] = useState(saved.selectedCollege);
   const [selectedCollegeName, setSelectedCollegeName] = useState(saved.selectedCollegeName);
+  const [selectedYear, setSelectedYear]       = useState<Year | ''>(saved.selectedYear as Year | '');
   const [historyCollegeId, setHistoryCollegeId] = useState('');
-  const [uploads, setUploads]                 = useState<Record<string, UploadEntry>>(saved.uploads);
+  const [historyYear, setHistoryYear]         = useState<Year | ''>('');
+  const [uploadsByYear, setUploadsByYear]     = useState<Record<string, Record<string, UploadEntry>>>(saved.uploadsByYear);
   const [previewKey, setPreviewKey]           = useState<string | null>(null);
-  // Modal is shown whenever allUploaded && not dismissed; dismissed resets on re-open attempt.
   const [modalDismissed, setModalDismissed]   = useState(false);
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -88,7 +107,7 @@ export default function CollegeUpload() {
     queryFn: () => api.get<{ colleges: College[] }>('/colleges/submitted').then((r) => r.colleges),
   });
 
-  // ── Derived values (no effects needed) ───────────────────────────────────
+  // ── Derived values ─────────────────────────────────────────────────────────
 
   const allUploaded =
     !loadingAvailable &&
@@ -96,24 +115,22 @@ export default function CollegeUpload() {
     availableColleges.length === 0 &&
     submittedColleges.length > 0;
 
-  // College users: lock the college selection to their own college.
   const lockedCollege = isCollegeUser && user?.collegeId
     ? availableColleges.find((c) => c.college_id === user.collegeId) ?? null
     : null;
 
   const effectiveSelectedCollege     = lockedCollege ? String(lockedCollege.college_id) : selectedCollege;
   const effectiveSelectedCollegeName = lockedCollege ? lockedCollege.college_name : selectedCollegeName;
+  const effectiveTab: Tab            = allUploaded ? 'history' : activeTab;
+  const effectiveHistoryCollegeId    = isCollegeUser && user?.collegeId ? String(user.collegeId) : historyCollegeId;
+  const showAllUploadedModal         = allUploaded && !modalDismissed;
 
-  // When all colleges are uploaded the active tab is always history.
-  const effectiveTab: Tab = allUploaded ? 'history' : activeTab;
+  // Uploads and files for the currently selected year
+  const currentUploads = selectedYear ? (uploadsByYear[selectedYear] ?? {}) : {};
+  const ctxFiles       = selectedYear ? getFiles(selectedYear) : {};
 
-  // College users always see their own college in the history dropdown.
-  const effectiveHistoryCollegeId = isCollegeUser && user?.collegeId
-    ? String(user.collegeId)
-    : historyCollegeId;
-
-  // Show modal when all uploaded and user has not dismissed it this session.
-  const showAllUploadedModal = allUploaded && !modalDismissed;
+  const allRequiredDone = DOCUMENT_TYPES.filter((d) => d.required).every((d) => currentUploads[d.key]);
+  const showUploadCards = !!effectiveSelectedCollege && !!selectedYear;
 
   // ── Session storage sync ──────────────────────────────────────────────────
 
@@ -121,27 +138,39 @@ export default function CollegeUpload() {
     const stored: StoredState = {
       selectedCollege: effectiveSelectedCollege,
       selectedCollegeName: effectiveSelectedCollegeName,
-      uploads: Object.fromEntries(
-        Object.entries(uploads).map(([k, v]) => [k, { fileName: v.fileName, uploadedAt: v.uploadedAt.toISOString() }]),
+      selectedYear,
+      uploadsByYear: Object.fromEntries(
+        Object.entries(uploadsByYear).map(([yr, docs]) => [
+          yr,
+          Object.fromEntries(
+            Object.entries(docs).map(([k, v]) => [k, { fileName: v.fileName, uploadedAt: v.uploadedAt.toISOString() }]),
+          ),
+        ]),
       ),
     };
     sessionStorage.setItem(UPLOAD_STORAGE_KEY, JSON.stringify(stored));
-  }, [effectiveSelectedCollege, effectiveSelectedCollegeName, uploads]);
+  }, [effectiveSelectedCollege, effectiveSelectedCollegeName, selectedYear, uploadsByYear]);
 
   // ─────────────────────────────────────────────────────────────────────────
 
-  const allRequiredDone = DOCUMENT_TYPES.filter((d) => d.required).every((d) => uploads[d.key]);
-
   function handleFile(key: string, files: FileList | null) {
     const file = files?.[0];
-    if (!file) return;
-    setFile(key, file);
-    setUploads((prev) => ({ ...prev, [key]: { fileName: file.name, uploadedAt: new Date() } }));
+    if (!file || !selectedYear) return;
+    setFile(selectedYear, key, file);
+    setUploadsByYear((prev) => ({
+      ...prev,
+      [selectedYear]: { ...(prev[selectedYear] ?? {}), [key]: { fileName: file.name, uploadedAt: new Date() } },
+    }));
   }
 
   function handleDelete(key: string) {
-    removeFile(key);
-    setUploads((prev) => { const n = { ...prev }; delete n[key]; return n; });
+    if (!selectedYear) return;
+    removeFile(selectedYear, key);
+    setUploadsByYear((prev) => {
+      const yearDocs = { ...(prev[selectedYear] ?? {}) };
+      delete yearDocs[key];
+      return { ...prev, [selectedYear]: yearDocs };
+    });
   }
 
   function handleCollegeChange(collegeId: string) {
@@ -149,17 +178,18 @@ export default function CollegeUpload() {
     const name = availableColleges.find((c) => String(c.college_id) === collegeId)?.college_name ?? '';
     setSelectedCollege(collegeId);
     setSelectedCollegeName(name);
-    setUploads({});
+    setSelectedYear('');
+    setUploadsByYear({});
   }
 
   function handleHistoryCollegeChange(collegeId: string) {
     if (isCollegeUser) return;
     setHistoryCollegeId(collegeId);
+    setHistoryYear('');
   }
 
   function handleTabChange(tab: Tab) {
     if (tab === 'new' && allUploaded) {
-      // Re-show the modal each time user tries to switch to New Upload while locked.
       setModalDismissed(false);
       return;
     }
@@ -187,6 +217,20 @@ export default function CollegeUpload() {
             placeholder={loadingSubmitted ? 'Loading…' : 'Select a college to view'}
             disabled={loadingSubmitted || isCollegeUser}
           />
+          {effectiveHistoryCollegeId && (
+            <div className="yearPickerRow">
+              {YEARS.map((y) => (
+                <button
+                  key={y}
+                  type="button"
+                  className={`yearPickerBtn${historyYear === y ? ' yearPickerBtn--active' : ''}`}
+                  onClick={() => setHistoryYear(y)}
+                >
+                  {y}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -194,25 +238,47 @@ export default function CollegeUpload() {
         <>
           <div className="uploadCard">
             <h2>College Upload</h2>
-            <p>Select the TVET College you are uploading data for.</p>
-            <div className="formGroup">
-              <label htmlFor="college-select" className="formLabel">Select TVET College <span>*</span></label>
-              <SearchableSelect
-                id="college-select"
-                options={availableOptions}
-                value={effectiveSelectedCollege}
-                onChange={handleCollegeChange}
-                placeholder={loadingAvailable ? 'Loading colleges…' : 'Choose a college'}
-                disabled={loadingAvailable || isCollegeUser}
-                className="formSelect"
-              />
+            <p>Select the TVET College and year you are uploading data for.</p>
+            <div className="uploadCardRow">
+              <div className="formGroup uploadCardRow__college">
+                <label htmlFor="college-select" className="formLabel">Select TVET College <span>*</span></label>
+                <SearchableSelect
+                  id="college-select"
+                  options={availableOptions}
+                  value={effectiveSelectedCollege}
+                  onChange={handleCollegeChange}
+                  placeholder={loadingAvailable ? 'Loading colleges…' : 'Choose a college'}
+                  disabled={loadingAvailable || isCollegeUser}
+                  className="formSelect"
+                />
+              </div>
+
+              <div className="formGroup uploadCardRow__year">
+                <label className="formLabel">Select Upload Year <span>*</span></label>
+                <div className="yearPickerRow yearPickerRow--left">
+                  {YEARS.map((y) => (
+                    <button
+                      key={y}
+                      type="button"
+                      className={`yearPickerBtn${selectedYear === y ? ' yearPickerBtn--active' : ''}`}
+                      onClick={() => setSelectedYear(y)}
+                      disabled={!effectiveSelectedCollege}
+                    >
+                      {y}
+                      {uploadsByYear[y] && Object.keys(uploadsByYear[y]).length > 0 && (
+                        <span className="yearPickerBadge">{Object.keys(uploadsByYear[y]).length}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
-          {effectiveSelectedCollege && (
+          {showUploadCards && (
             <div className="uploadCardsGrid">
               {DOCUMENT_TYPES.map((doc) => {
-                const entry = uploads[doc.key];
+                const entry = currentUploads[doc.key];
                 return (
                   <div key={doc.key} className="docUploadCard">
                     <div className="docCardHeader">
@@ -273,7 +339,10 @@ export default function CollegeUpload() {
           )}
         </>
       ) : (
-        <UploadHistory collegeId={effectiveHistoryCollegeId ? Number(effectiveHistoryCollegeId) : null} />
+        <UploadHistory
+          collegeId={effectiveHistoryCollegeId ? Number(effectiveHistoryCollegeId) : null}
+          year={historyYear || null}
+        />
       )}
 
       <div className="pageActions">
@@ -281,7 +350,7 @@ export default function CollegeUpload() {
           ? <Link to={PATHS.home} className="backBtn"><BackArrowIcon /> Back</Link>
           : <Link to={PATHS.providerInformation} className="backBtn"><BackArrowIcon /> Back</Link>
         }
-        {effectiveTab === 'new' && effectiveSelectedCollege && allRequiredDone && (
+        {effectiveTab === 'new' && effectiveSelectedCollege && selectedYear && allRequiredDone && (
           <button type="button" className="submitBtn" onClick={() => navigate(PATHS.submissionSummary)}>
             Submit <ForwardArrowIcon />
           </button>
@@ -291,7 +360,7 @@ export default function CollegeUpload() {
       {previewFile && previewKey && (
         <PreviewModal
           file={previewFile}
-          fileName={uploads[previewKey]?.fileName}
+          fileName={currentUploads[previewKey]?.fileName}
           onClose={() => setPreviewKey(null)}
         />
       )}
@@ -316,10 +385,7 @@ export default function CollegeUpload() {
               To replace a specific report, go to the <strong>Upload History</strong> tab
               {!isCollegeUser && ', select the college,'} and use the <strong>Re-upload</strong> option on the document.
             </p>
-            <button
-              className="allUploadedBtn"
-              onClick={() => setModalDismissed(true)}
-            >
+            <button className="allUploadedBtn" onClick={() => setModalDismissed(true)}>
               Go to Upload History
             </button>
           </div>

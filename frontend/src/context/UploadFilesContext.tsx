@@ -1,35 +1,51 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 
 interface UploadFilesContextValue {
-  files: Record<string, File>;
-  setFile: (key: string, file: File) => void;
-  removeFile: (key: string) => void;
+  getFiles: (year: string) => Record<string, File>;
+  setFile: (year: string, key: string, file: File) => void;
+  removeFile: (year: string, key: string) => void;
+  clearFilesForYear: (year: string) => void;
   clearFiles: () => void;
 }
 
 const UploadFilesContext = createContext<UploadFilesContextValue | null>(null);
 
 export function UploadFilesProvider({ children }: { children: ReactNode }) {
-  const [files, setFiles] = useState<Record<string, File>>({});
+  const [filesByYear, setFilesByYear] = useState<Record<string, Record<string, File>>>({});
 
-  function setFile(key: string, file: File) {
-    setFiles((prev) => ({ ...prev, [key]: file }));
+  function getFiles(year: string): Record<string, File> {
+    return filesByYear[year] ?? {};
   }
 
-  function removeFile(key: string) {
-    setFiles((prev) => {
+  function setFile(year: string, key: string, file: File) {
+    setFilesByYear((prev) => ({
+      ...prev,
+      [year]: { ...(prev[year] ?? {}), [key]: file },
+    }));
+  }
+
+  function removeFile(year: string, key: string) {
+    setFilesByYear((prev) => {
+      const yearFiles = { ...(prev[year] ?? {}) };
+      delete yearFiles[key];
+      return { ...prev, [year]: yearFiles };
+    });
+  }
+
+  function clearFilesForYear(year: string) {
+    setFilesByYear((prev) => {
       const next = { ...prev };
-      delete next[key];
+      delete next[year];
       return next;
     });
   }
 
   function clearFiles() {
-    setFiles({});
+    setFilesByYear({});
   }
 
   return (
-    <UploadFilesContext.Provider value={{ files, setFile, removeFile, clearFiles }}>
+    <UploadFilesContext.Provider value={{ getFiles, setFile, removeFile, clearFilesForYear, clearFiles }}>
       {children}
     </UploadFilesContext.Provider>
   );

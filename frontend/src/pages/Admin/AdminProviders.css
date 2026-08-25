@@ -93,6 +93,67 @@
   margin-top: 0.25rem;
 }
 
+/* ── Year split layout ── */
+.yearSplitRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  min-height: 120px;
+}
+
+/* Divider between the two year panels */
+.yearSplitRow > .yearPanel:first-child {
+  border-right: 1px solid #e2e8f0;
+}
+
+.yearPanel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.yearPanel__header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1.25rem 0.65rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.yearPanel__badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  background: #0047a2;
+  border-radius: 6px;
+  padding: 0.15rem 0.55rem;
+  letter-spacing: 0.03em;
+}
+
+.yearPanel__count {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.yearPanel__empty {
+  padding: 1.5rem 1.25rem;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* Override table styles inside year panels for compact fit */
+.yearPanel .collegeTable th,
+.yearPanel .collegeTable td {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+.yearPanel .collegeTable th:first-child,
+.yearPanel .collegeTable td:first-child {
+  padding-left: 1.25rem;
+}
+
 .chevron {
   color: #94a3b8;
   transition: transform 0.2s;

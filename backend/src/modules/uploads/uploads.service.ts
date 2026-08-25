@@ -6,6 +6,7 @@ interface UploadRecord {
   upload_id: number;
   s3_bucket_link: string;
   college_id: number;
+  upload_year: number;
   created_at: Date;
 }
 
@@ -22,14 +23,15 @@ export async function saveUploadBatch(
   userId: number,
   collegeId: number,
   s3Keys: string[],
+  year: number = 2025,
 ): Promise<void> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     for (const key of s3Keys) {
       await client.query(
-        'INSERT INTO uploads (user_id, s3_bucket_link, college_id) VALUES ($1, $2, $3)',
-        [userId, key, collegeId],
+        'INSERT INTO uploads (user_id, s3_bucket_link, college_id, upload_year) VALUES ($1, $2, $3, $4)',
+        [userId, key, collegeId, year],
       );
     }
     await client.query('COMMIT');
@@ -44,14 +46,21 @@ export async function saveUploadBatch(
 export async function getUploadsByCollege(
   providerName: string,
   collegeId: number,
+  year?: number,
 ): Promise<UploadRecord[]> {
+  const params: (string | number)[] = [providerName, collegeId];
+  let yearClause = '';
+  if (year !== undefined) {
+    params.push(year);
+    yearClause = ` AND u.upload_year = $${params.length}`;
+  }
   const { rows } = await pool.query<UploadRecord>(
-    `SELECT u.upload_id, u.s3_bucket_link, u.college_id, u.created_at
+    `SELECT u.upload_id, u.s3_bucket_link, u.college_id, u.upload_year, u.created_at
      FROM uploads u
      JOIN users usr ON usr.user_id = u.user_id
-     WHERE usr.provider_name = $1 AND u.college_id = $2
+     WHERE usr.provider_name = $1 AND u.college_id = $2${yearClause}
      ORDER BY u.created_at DESC`,
-    [providerName, collegeId],
+    params,
   );
   return rows;
 }

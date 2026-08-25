@@ -15,14 +15,15 @@ interface HistoryDocument {
 
 interface Props {
   collegeId: number | null;
+  year: string | null;
 }
 
-function useCollegeHistory(collegeId: number | null) {
+function useCollegeHistory(collegeId: number | null, year: string | null) {
   return useQuery({
-    queryKey: ['uploads', 'history', collegeId],
+    queryKey: ['uploads', 'history', collegeId, year],
     queryFn: () =>
-      api.get<{ documents: HistoryDocument[] }>(`/uploads/history/${collegeId}`).then((r) => r.documents),
-    enabled: collegeId !== null,
+      api.get<{ documents: HistoryDocument[] }>(`/uploads/history/${collegeId}?year=${year}`).then((r) => r.documents),
+    enabled: collegeId !== null && year !== null,
   });
 }
 
@@ -53,9 +54,9 @@ function PlusIcon() {
   );
 }
 
-export default function UploadHistory({ collegeId }: Props) {
+export default function UploadHistory({ collegeId, year }: Props) {
   const queryClient = useQueryClient();
-  const { data: documents = [], isLoading } = useCollegeHistory(collegeId);
+  const { data: documents = [], isLoading } = useCollegeHistory(collegeId, year);
   const [tooltip, setTooltip]       = useState<TooltipPos | null>(null);
   const [previewDoc, setPreviewDoc] = useState<HistoryDocument | null>(null);
   const [reuploadDoc, setReuploadDoc] = useState<HistoryDocument | null>(null);
@@ -78,12 +79,13 @@ export default function UploadHistory({ collegeId }: Props) {
 
   async function handleHeadcountFile(files: FileList | null) {
     const file = files?.[0];
-    if (!file || !collegeId) return;
+    if (!file || !collegeId || !year) return;
     setUploadingHeadcount(true);
     setHeadcountError(null);
     try {
       const formData = new FormData();
       formData.append('headcount', file);
+      formData.append('year', year);
       await api.postUpload(`/uploads/headcount/${collegeId}`, formData);
       await queryClient.invalidateQueries({ queryKey: ['uploads', 'history', collegeId] });
     } catch (err) {
@@ -98,6 +100,14 @@ export default function UploadHistory({ collegeId }: Props) {
     return (
       <div className="documentsCard">
         <p style={{ color: '#6b7280', padding: '1.5rem 0' }}>Select a college above to view its upload history.</p>
+      </div>
+    );
+  }
+
+  if (!year) {
+    return (
+      <div className="documentsCard">
+        <p style={{ color: '#6b7280', padding: '1.5rem 0' }}>Select a year above to view the upload history.</p>
       </div>
     );
   }

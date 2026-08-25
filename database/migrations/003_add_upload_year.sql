@@ -1,0 +1,2 @@
+ALTER TABLE uploads ADD COLUMN IF NOT EXISTS upload_year INTEGER NOT NULL DEFAULT 2025;
+UPDATE uploads SET upload_year = 2025 WHERE upload_year IS NULL;

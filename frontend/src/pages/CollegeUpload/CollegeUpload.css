@@ -10,6 +10,9 @@
 .historyCollegeFilter {
   width: 360px;
   margin: 0 auto 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* ── College selection card ── */
@@ -21,7 +24,7 @@
   margin-bottom: 1.25rem;
 }
 .uploadCard h2 { font-size: 1.15rem; font-weight: 700; color: #0f172a; margin: 0 0 0.3rem; }
-.uploadCard p  { font-size: 0.875rem; color: #64748b; margin: 0 0 1.25rem; }
+.uploadCard p  { font-size: 0.875rem; color: #64748b; margin: 0 0 1rem; }
 
 .formGroup { display: flex; flex-direction: column; gap: 0.4rem; }
 .formLabel { font-size: 0.875rem; font-weight: 600; color: #1e293b; }
@@ -33,12 +36,93 @@
   font-size: 0.9rem;
 }
 
+/* ── College + Year inline row ── */
+.uploadCardRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.uploadCardRow__college {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+.uploadCardRow__year {
+  flex: 0 0 auto;
+}
+
 /* ── 2-column cards grid ── */
 .uploadCardsGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
   margin-bottom: 1.5rem;
+}
+
+/* ── Year picker ── */
+.yearPickerRow {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 0.75rem;
+}
+.yearPickerRow--left {
+  justify-content: flex-start;
+  margin-top: 0;
+}
+
+.yearPickerBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 2px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.yearPickerBtn:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+.yearPickerBtn--active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+.yearPickerBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Badge showing how many files are staged for that year */
+.yearPickerBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: rgba(255,255,255,0.3);
+  color: inherit;
+}
+.yearPickerBtn--active .yearPickerBadge {
+  background: rgba(255,255,255,0.35);
+  color: #fff;
+}
+.yearPickerBtn:not(.yearPickerBtn--active) .yearPickerBadge {
+  background: #2563eb;
+  color: #fff;
 }
 
 /* ── Bottom page actions (Back + Submit) ── */

@@ -44,11 +44,10 @@ function ProviderTile({
 interface ModalState { college: ProviderCollege; year: Year; }
 
 function YearCollegePanel({
-  year, colleges, provider, onView,
+  year, colleges, onView,
 }: {
   year: Year;
   colleges: ProviderCollege[];
-  provider: string;
   onView: (college: ProviderCollege, year: Year) => void;
 }) {
   // Colleges that have at least one file for this year
@@ -127,7 +126,6 @@ function ProviderYearSplit({ provider }: { provider: Provider }) {
             key={year}
             year={year}
             colleges={provider.colleges}
-            provider={provider.providerName}
             onView={(college, y) => setModal({ college, year: y })}
           />
         ))}

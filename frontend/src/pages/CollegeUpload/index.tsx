@@ -136,6 +136,12 @@ export default function CollegeUpload() {
   });
   const submittedYears = submittedYearsRaw;
 
+  // Years this college still needs to upload for (not yet submitted)
+  const availableYears = useMemo<Year[]>(() => {
+    if (!collegeIdForYears) return [...YEARS];
+    return YEARS.filter((y) => !submittedYears.includes(y));
+  }, [collegeIdForYears, submittedYears]);
+
   // Auto-default year to whichever year the college hasn't uploaded for yet
   const missingYear = useMemo<Year | null>(() => {
     if (!collegeIdForYears) return null;
@@ -278,7 +284,7 @@ export default function CollegeUpload() {
               <div className="formGroup uploadCardRow__year">
                 <label className="formLabel">Select Upload Year <span>*</span></label>
                 <div className="yearPickerRow yearPickerRow--left">
-                  {YEARS.map((y) => (
+                  {(effectiveSelectedCollege ? availableYears : [...YEARS]).map((y) => (
                     <button
                       key={y}
                       type="button"

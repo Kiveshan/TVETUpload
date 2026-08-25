@@ -78,14 +78,18 @@ export default function Admin() {
     navigate('/');
   }
 
-  function handleExport(year: PdfYear) {
+  async function handleExport(year: PdfYear) {
     const providers = providersData?.providers ?? [];
-    const neverUploaded = year === '2025'
-      ? (stats?.neverUploadedColleges2025 ?? [])
-      : year === '2026'
-        ? (stats?.neverUploadedColleges2026 ?? [])
-        : (stats?.neverUploadedColleges ?? []);
-    void exportPDF(providers, neverUploaded, year === 'both' ? undefined : year);
+    if (year === 'both') {
+      await exportPDF(providers, stats?.neverUploadedColleges2025 ?? [], '2025');
+      await new Promise<void>((r) => setTimeout(r, 600));
+      await exportPDF(providers, stats?.neverUploadedColleges2026 ?? [], '2026');
+    } else {
+      const neverUploaded = year === '2025'
+        ? (stats?.neverUploadedColleges2025 ?? [])
+        : (stats?.neverUploadedColleges2026 ?? []);
+      void exportPDF(providers, neverUploaded, year);
+    }
   }
 
   if (!user || user.role !== 'admin') return null;
@@ -129,7 +133,7 @@ export default function Admin() {
             <StatsCards stats={stats} onTotalClick={() => setShowDirectory(true)} />
             {(stats.neverUploadedColleges2025.length > 0 || stats.neverUploadedColleges2026.length > 0) && (
               <AttentionColleges
-                colleges={stats.neverUploadedColleges}
+                colleges={[]}
                 colleges2025={stats.neverUploadedColleges2025}
                 colleges2026={stats.neverUploadedColleges2026}
               />

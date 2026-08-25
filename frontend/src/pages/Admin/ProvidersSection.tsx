@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { pct, barColor, lastSubmission } from './adminHelpers';
-import { TOTAL_FOLDERS } from './adminTypes';
+import { lastSubmission } from './adminHelpers';
 import { PROVIDER_TOTALS } from './adminProviderMap';
 import { IconChevronRight } from './AdminIcons';
-import { ProgressBar } from './StatsCards';
 import FileModal from './FileModal';
 import type { Provider, ProviderCollege } from './adminTypes';
 
@@ -75,34 +73,24 @@ function YearCollegePanel({
             <thead>
               <tr>
                 <th>College</th>
-                <th>Progress</th>
                 <th>Files</th>
                 <th>Last Submission</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {yearColleges.map((college) => {
-                const collegePct = pct(college.files.length, TOTAL_FOLDERS);
-                return (
-                  <tr key={college.collegeId}>
-                    <td className="td--collegeName">{college.collegeName}</td>
-                    <td>
-                      <div className="inlineProgress">
-                        <ProgressBar value={collegePct} color={barColor(collegePct)} />
-                        <span>{college.files.length} of {TOTAL_FOLDERS}</span>
-                      </div>
-                    </td>
-                    <td>{college.files.length}</td>
-                    <td>{lastSubmission(college.files)}</td>
-                    <td>
-                      <button className="viewLink" onClick={() => onView(college, year)}>
-                        View files <IconChevronRight />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+              {yearColleges.map((college) => (
+                <tr key={college.collegeId}>
+                  <td className="td--collegeName">{college.collegeName}</td>
+                  <td>{college.files.length}</td>
+                  <td>{lastSubmission(college.files)}</td>
+                  <td>
+                    <button className="viewLink" onClick={() => onView(college, year)}>
+                      View files <IconChevronRight />
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}

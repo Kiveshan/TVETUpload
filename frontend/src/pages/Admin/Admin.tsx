@@ -16,10 +16,43 @@ import './AdminDocs.css';
 import './AdminProviders.css';
 import '../../layouts/PortalLayout/PortalLayout.css';
 
+type PdfYear = '2025' | '2026' | 'both';
+
+function PdfYearModal({ onClose, onExport }: { onClose: () => void; onExport: (year: PdfYear) => void }) {
+  return (
+    <div className="modalOverlay" onClick={onClose}>
+      <div className="modalBox" style={{ maxWidth: 380 }} onClick={(e) => e.stopPropagation()}>
+        <div className="modalBox__header">
+          <div>
+            <p className="modalBox__title">Export PDF Summary</p>
+            <p className="modalBox__subtitle">Choose which year(s) to include</p>
+          </div>
+        </div>
+        <div className="modalBox__body" style={{ padding: '1rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+          {(['2025', '2026', 'both'] as PdfYear[]).map((y) => (
+            <button
+              key={y}
+              className="pdfYearOption"
+              onClick={() => { onExport(y); onClose(); }}
+            >
+              <IconDownload />
+              {y === 'both' ? 'Both years (2025 & 2026)' : `${y} only`}
+            </button>
+          ))}
+        </div>
+        <div className="modalBox__footer">
+          <button className="btnOutline" onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Admin() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showDirectory, setShowDirectory] = useState(false);
+  const [showPdfModal, setShowPdfModal] = useState(false);
 
   useEffect(() => {
     if (!user) { navigate('/', { replace: true }); return; }
@@ -43,6 +76,16 @@ export default function Admin() {
   async function handleLogout() {
     await logout();
     navigate('/');
+  }
+
+  function handleExport(year: PdfYear) {
+    const providers = providersData?.providers ?? [];
+    const neverUploaded = year === '2025'
+      ? (stats?.neverUploadedColleges2025 ?? [])
+      : year === '2026'
+        ? (stats?.neverUploadedColleges2026 ?? [])
+        : (stats?.neverUploadedColleges ?? []);
+    void exportPDF(providers, neverUploaded, year === 'both' ? undefined : year);
   }
 
   if (!user || user.role !== 'admin') return null;
@@ -72,7 +115,7 @@ export default function Admin() {
           </div>
           <div className="adminPageHeader__actions">
             {providers.length > 0 && (
-              <button className="btnPrimary" onClick={() => { void exportPDF(providers, stats?.neverUploadedColleges ?? []); }}>
+              <button className="btnPrimary" onClick={() => setShowPdfModal(true)}>
                 <IconDownload /> Export PDF Summary
               </button>
             )}
@@ -84,8 +127,12 @@ export default function Admin() {
         ) : stats ? (
           <>
             <StatsCards stats={stats} onTotalClick={() => setShowDirectory(true)} />
-            {stats.neverUploadedColleges.length > 0 && (
-              <AttentionColleges colleges={stats.neverUploadedColleges} />
+            {(stats.neverUploadedColleges2025.length > 0 || stats.neverUploadedColleges2026.length > 0) && (
+              <AttentionColleges
+                colleges={stats.neverUploadedColleges}
+                colleges2025={stats.neverUploadedColleges2025}
+                colleges2026={stats.neverUploadedColleges2026}
+              />
             )}
             <ProvidersSection providers={providers} />
           </>
@@ -93,6 +140,12 @@ export default function Admin() {
       </main>
       <Footer />
       {showDirectory && <CollegeDirectoryModal onClose={() => setShowDirectory(false)} />}
+      {showPdfModal && (
+        <PdfYearModal
+          onClose={() => setShowPdfModal(false)}
+          onExport={handleExport}
+        />
+      )}
     </div>
   );
 }

@@ -14,6 +14,10 @@ export interface AdminStats {
   totalColleges: number;
   collegesUploaded: number;
   collegesNeverUploaded: number;
+  collegesUploaded2025: number;
+  collegesUploaded2026: number;
+  neverUploadedColleges2025: { college_id: number; college_name: string }[];
+  neverUploadedColleges2026: { college_id: number; college_name: string }[];
   totalFiles: number;
   totalReuploads: number;
   lastUpdated: string | null;

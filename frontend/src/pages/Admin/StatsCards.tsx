@@ -30,7 +30,10 @@ export default function StatsCards({ stats, onTotalClick }: { stats: AdminStats;
           <span className="statCard__val statCard__val--green">{stats.collegesUploaded}</span>
           <span className="statCard__icon statCard__icon--green"><IconCheck /></span>
         </div>
-        <span className="statCard__sub">{uploadedPct}% of total</span>
+        <div className="statCard__yearRow">
+          <span className="statCard__yearPill statCard__yearPill--green">2025: {stats.collegesUploaded2025}</span>
+          <span className="statCard__yearPill statCard__yearPill--blue">2026: {stats.collegesUploaded2026}</span>
+        </div>
         <ProgressBar value={uploadedPct} color="#16a34a" />
       </div>
 
@@ -40,7 +43,10 @@ export default function StatsCards({ stats, onTotalClick }: { stats: AdminStats;
           <span className="statCard__val statCard__val--red">{stats.collegesNeverUploaded}</span>
           <span className="statCard__icon statCard__icon--red"><IconAlert /></span>
         </div>
-        <span className="statCard__sub statCard__sub--red">Needs attention</span>
+        <div className="statCard__yearRow">
+          <span className="statCard__yearPill statCard__yearPill--red">2025: {stats.neverUploadedColleges2025.length}</span>
+          <span className="statCard__yearPill statCard__yearPill--red">2026: {stats.neverUploadedColleges2026.length}</span>
+        </div>
       </div>
 
       <div className="statCard">

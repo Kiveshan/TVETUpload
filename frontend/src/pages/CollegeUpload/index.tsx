@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import PortalLayout from '../../layouts/PortalLayout/PortalLayout';
@@ -125,12 +125,34 @@ export default function CollegeUpload() {
   const effectiveHistoryCollegeId    = isCollegeUser && user?.collegeId ? String(user.collegeId) : historyCollegeId;
   const showAllUploadedModal         = allUploaded && !modalDismissed;
 
-  // Uploads and files for the currently selected year
-  const currentUploads = selectedYear ? (uploadsByYear[selectedYear] ?? {}) : {};
-  const ctxFiles       = selectedYear ? getFiles(selectedYear) : {};
+  // Which years the currently selected/locked college has already submitted for
+  const collegeIdForYears = effectiveSelectedCollege || (isCollegeUser && user?.collegeId ? String(user.collegeId) : '');
+  const { data: submittedYearsRaw = [] } = useQuery({
+    queryKey: ['submitted-years', collegeIdForYears],
+    queryFn: () =>
+      api.get<{ years: number[] }>(`/colleges/submitted-years/${collegeIdForYears}`)
+        .then((r) => r.years.map(String)),
+    enabled: !!collegeIdForYears,
+  });
+  const submittedYears = submittedYearsRaw;
+
+  // Auto-default year to whichever year the college hasn't uploaded for yet
+  const missingYear = useMemo<Year | null>(() => {
+    if (!collegeIdForYears) return null;
+    if (submittedYears.includes('2025') && !submittedYears.includes('2026')) return '2026';
+    if (submittedYears.includes('2026') && !submittedYears.includes('2025')) return '2025';
+    return null;
+  }, [collegeIdForYears, submittedYears]);
+
+  // Effective upload year: user's explicit pick, or auto-default to missing year
+  const effectiveYear: Year | '' = selectedYear || missingYear || '';
+
+  // Uploads and files for the effective year
+  const currentUploads = effectiveYear ? (uploadsByYear[effectiveYear] ?? {}) : {};
+  const ctxFiles       = effectiveYear ? getFiles(effectiveYear) : {};
 
   const allRequiredDone = DOCUMENT_TYPES.filter((d) => d.required).every((d) => currentUploads[d.key]);
-  const showUploadCards = !!effectiveSelectedCollege && !!selectedYear;
+  const showUploadCards = !!effectiveSelectedCollege && !!effectiveYear;
 
   // ── Session storage sync ──────────────────────────────────────────────────
 
@@ -138,7 +160,7 @@ export default function CollegeUpload() {
     const stored: StoredState = {
       selectedCollege: effectiveSelectedCollege,
       selectedCollegeName: effectiveSelectedCollegeName,
-      selectedYear,
+      selectedYear: effectiveYear,
       uploadsByYear: Object.fromEntries(
         Object.entries(uploadsByYear).map(([yr, docs]) => [
           yr,
@@ -149,27 +171,27 @@ export default function CollegeUpload() {
       ),
     };
     sessionStorage.setItem(UPLOAD_STORAGE_KEY, JSON.stringify(stored));
-  }, [effectiveSelectedCollege, effectiveSelectedCollegeName, selectedYear, uploadsByYear]);
+  }, [effectiveSelectedCollege, effectiveSelectedCollegeName, effectiveYear, uploadsByYear]);
 
   // ─────────────────────────────────────────────────────────────────────────
 
   function handleFile(key: string, files: FileList | null) {
     const file = files?.[0];
-    if (!file || !selectedYear) return;
-    setFile(selectedYear, key, file);
+    if (!file || !effectiveYear) return;
+    setFile(effectiveYear, key, file);
     setUploadsByYear((prev) => ({
       ...prev,
-      [selectedYear]: { ...(prev[selectedYear] ?? {}), [key]: { fileName: file.name, uploadedAt: new Date() } },
+      [effectiveYear]: { ...(prev[effectiveYear] ?? {}), [key]: { fileName: file.name, uploadedAt: new Date() } },
     }));
   }
 
   function handleDelete(key: string) {
-    if (!selectedYear) return;
-    removeFile(selectedYear, key);
+    if (!effectiveYear) return;
+    removeFile(effectiveYear, key);
     setUploadsByYear((prev) => {
-      const yearDocs = { ...(prev[selectedYear] ?? {}) };
+      const yearDocs = { ...(prev[effectiveYear] ?? {}) };
       delete yearDocs[key];
-      return { ...prev, [selectedYear]: yearDocs };
+      return { ...prev, [effectiveYear]: yearDocs };
     });
   }
 
@@ -260,7 +282,7 @@ export default function CollegeUpload() {
                     <button
                       key={y}
                       type="button"
-                      className={`yearPickerBtn${selectedYear === y ? ' yearPickerBtn--active' : ''}`}
+                      className={`yearPickerBtn${effectiveYear === y ? ' yearPickerBtn--active' : ''}`}
                       onClick={() => setSelectedYear(y)}
                       disabled={!effectiveSelectedCollege}
                     >
@@ -350,7 +372,7 @@ export default function CollegeUpload() {
           ? <Link to={PATHS.home} className="backBtn"><BackArrowIcon /> Back</Link>
           : <Link to={PATHS.providerInformation} className="backBtn"><BackArrowIcon /> Back</Link>
         }
-        {effectiveTab === 'new' && effectiveSelectedCollege && selectedYear && allRequiredDone && (
+        {effectiveTab === 'new' && effectiveSelectedCollege && effectiveYear && allRequiredDone && (
           <button type="button" className="submitBtn" onClick={() => navigate(PATHS.submissionSummary)}>
             Submit <ForwardArrowIcon />
           </button>

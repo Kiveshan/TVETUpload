@@ -202,6 +202,46 @@
   flex-wrap: wrap;
 }
 
+.attentionYearTabs {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.attentionYearTab {
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.attentionYearTab:hover { background: #e2e8f0; color: #0f172a; }
+.attentionYearTab--active {
+  background: #0047a2;
+  color: #fff;
+  border-color: #0047a2;
+}
+
+.pdfYearOption {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, border-color 0.12s;
+}
+.pdfYearOption:hover { background: #f0f6ff; border-color: #0047a2; color: #0047a2; }
+
 .searchBox {
   display: flex;
   align-items: center;

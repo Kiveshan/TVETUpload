@@ -82,7 +82,17 @@ async function svgToDataUrl(svgUrl: string, w: number, h: number): Promise<strin
 export async function exportPDF(
   providers: Provider[],
   neverUploaded: { college_id: number; college_name: string }[] = [],
+  year?: string,
 ) {
+  // Filter files by year if specified
+  const filteredProviders: Provider[] = year
+    ? providers.map((p) => ({
+        ...p,
+        colleges: p.colleges
+          .map((c) => ({ ...c, files: c.files.filter((f) => f.year === year) }))
+          .filter((c) => c.files.length > 0),
+      }))
+    : providers;
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
@@ -136,7 +146,7 @@ export async function exportPDF(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(...textMid);
-  doc.text('Provider Summary Report', textX, titleY + 5);
+  doc.text(year ? `Provider Summary Report — ${year}` : 'Provider Summary Report (All Years)', textX, titleY + 5);
 
   // ── Timestamp below header ──
   let y = bannerH + 8;
@@ -166,7 +176,7 @@ export async function exportPDF(
 
   let rowIndex = 0;
 
-  providers.forEach((p) => {
+  filteredProviders.forEach((p) => {
     const uploadedCount = p.colleges.filter((c) => c.files.length > 0).length;
 
     // Page break check
@@ -348,5 +358,6 @@ export async function exportPDF(
     doc.text(`Page ${i} of ${totalPages}`, margin + contentW, fY + 1, { align: 'right' });
   }
 
-  doc.save(`tvet_provider_summary_${now.toISOString().slice(0, 10)}.pdf`);
+  const yearSuffix = year ? `_${year}` : '_all_years';
+  doc.save(`tvet_provider_summary${yearSuffix}_${now.toISOString().slice(0, 10)}.pdf`);
 }

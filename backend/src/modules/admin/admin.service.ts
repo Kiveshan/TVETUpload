@@ -15,6 +15,10 @@ export interface AdminStats {
   totalColleges: number;
   collegesUploaded: number;
   collegesNeverUploaded: number;
+  collegesUploaded2025: number;
+  collegesUploaded2026: number;
+  neverUploadedColleges2025: { college_id: number; college_name: string }[];
+  neverUploadedColleges2026: { college_id: number; college_name: string }[];
   totalFiles: number;
   totalReuploads: number;
   lastUpdated: string | null;
@@ -45,7 +49,7 @@ export interface Provider {
 }
 
 export async function getAdminStats(): Promise<AdminStats> {
-  const [totalRes, uploadedRes, typeRes, neverRes, filesRes] = await Promise.all([
+  const [totalRes, uploadedRes, typeRes, neverRes, filesRes, up2025Res, up2026Res, never2025Res, never2026Res] = await Promise.all([
     pool.query<{ total: string }>('SELECT COUNT(*) AS total FROM college'),
     pool.query<{ count: string }>(
       "SELECT COUNT(DISTINCT college_id) AS count FROM uploads WHERE s3_bucket_link NOT LIKE '%/Old/%'",
@@ -84,6 +88,26 @@ export async function getAdminStats(): Promise<AdminStats> {
       FROM uploads
       WHERE s3_bucket_link NOT LIKE '%/Old/%'
     `),
+    pool.query<{ count: string }>(
+      "SELECT COUNT(DISTINCT college_id) AS count FROM uploads WHERE upload_year = 2025 AND s3_bucket_link NOT LIKE '%/Old/%'",
+    ),
+    pool.query<{ count: string }>(
+      "SELECT COUNT(DISTINCT college_id) AS count FROM uploads WHERE upload_year = 2026 AND s3_bucket_link NOT LIKE '%/Old/%'",
+    ),
+    pool.query<{ college_id: number; college_name: string }>(`
+      SELECT c.college_id, c.college_name FROM college c
+      WHERE NOT EXISTS (
+        SELECT 1 FROM uploads u WHERE u.college_id = c.college_id
+          AND u.upload_year = 2025 AND u.s3_bucket_link NOT LIKE '%/Old/%'
+      ) ORDER BY c.college_name
+    `),
+    pool.query<{ college_id: number; college_name: string }>(`
+      SELECT c.college_id, c.college_name FROM college c
+      WHERE NOT EXISTS (
+        SELECT 1 FROM uploads u WHERE u.college_id = c.college_id
+          AND u.upload_year = 2026 AND u.s3_bucket_link NOT LIKE '%/Old/%'
+      ) ORDER BY c.college_name
+    `),
   ]);
 
   const totalColleges = parseInt(totalRes.rows[0].total, 10);
@@ -106,6 +130,10 @@ export async function getAdminStats(): Promise<AdminStats> {
     totalColleges,
     collegesUploaded,
     collegesNeverUploaded: totalColleges - collegesUploaded,
+    collegesUploaded2025: parseInt(up2025Res.rows[0].count, 10),
+    collegesUploaded2026: parseInt(up2026Res.rows[0].count, 10),
+    neverUploadedColleges2025: never2025Res.rows,
+    neverUploadedColleges2026: never2026Res.rows,
     totalFiles: parseInt(fr.total_files, 10),
     totalReuploads: parseInt(fr.total_reuploads ?? '0', 10),
     lastUpdated: fr.last_updated ? fr.last_updated.toISOString() : null,

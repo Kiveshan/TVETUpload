@@ -3,39 +3,51 @@ import { IconAlert, IconChevronDown, IconSearch, IconBuilding } from './AdminIco
 import { getProviderForCollege } from './adminProviderMap';
 
 interface College { college_id: number; college_name: string; }
+type YearFilter = 'both' | '2025' | '2026';
 
-export default function AttentionColleges({ colleges }: { colleges: College[] }) {
+interface Props {
+  colleges: College[];
+  colleges2025: College[];
+  colleges2026: College[];
+}
+
+export default function AttentionColleges({ colleges, colleges2025, colleges2026 }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [yearFilter, setYearFilter] = useState<YearFilter>('both');
+
+  const activeList = yearFilter === '2025' ? colleges2025 : yearFilter === '2026' ? colleges2026 : colleges;
 
   const grouped = useMemo(() => {
     const q = search.toLowerCase();
-    // First group everything, then filter: keep providers whose name matches OR colleges whose name matches
     const map: Record<string, College[]> = {};
-    for (const c of colleges) {
+    for (const c of activeList) {
       const provider = getProviderForCollege(c.college_name) ?? 'Other';
       if (!map[provider]) map[provider] = [];
       map[provider].push(c);
     }
-    // Sort colleges within each group A-Z
     for (const key of Object.keys(map)) {
       map[key].sort((a, b) => a.college_name.localeCompare(b.college_name));
     }
     if (!q) return map;
-    // Filter: if provider name matches → show all its colleges; else show only matching colleges
     const result: Record<string, College[]> = {};
     for (const [provider, list] of Object.entries(map)) {
       if (provider.toLowerCase().includes(q)) {
-        result[provider] = list; // whole group
+        result[provider] = list;
       } else {
         const matched = list.filter((c) => c.college_name.toLowerCase().includes(q));
         if (matched.length) result[provider] = matched;
       }
     }
     return result;
-  }, [colleges, search]);
+  }, [activeList, search]);
 
   const totalFiltered = Object.values(grouped).reduce((s, arr) => s + arr.length, 0);
+
+  const yearLabel =
+    yearFilter === '2025' ? 'for 2025' :
+    yearFilter === '2026' ? 'for 2026' :
+    'across all years';
 
   return (
     <div className="adminSection">
@@ -46,12 +58,12 @@ export default function AttentionColleges({ colleges }: { colleges: College[] })
             <div>
               <span className="attentionSummary__title">Colleges Requiring Attention</span>
               <span className="attentionSummary__sub">
-                {colleges.length} college{colleges.length !== 1 ? 's' : ''} have never uploaded any documents
+                {activeList.length} college{activeList.length !== 1 ? 's' : ''} have never uploaded {yearLabel}
               </span>
             </div>
           </div>
           <div className="attentionSummary__right">
-            <span className="attentionSummary__count">{colleges.length}</span>
+            <span className="attentionSummary__count">{activeList.length}</span>
             <span className={`chevron${open ? ' chevron--open' : ''}`}><IconChevronDown /></span>
           </div>
         </button>
@@ -66,6 +78,17 @@ export default function AttentionColleges({ colleges }: { colleges: College[] })
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
+              </div>
+              <div className="attentionYearTabs">
+                {(['both', '2025', '2026'] as YearFilter[]).map((y) => (
+                  <button
+                    key={y}
+                    className={`attentionYearTab${yearFilter === y ? ' attentionYearTab--active' : ''}`}
+                    onClick={() => setYearFilter(y)}
+                  >
+                    {y === 'both' ? 'All' : y}
+                  </button>
+                ))}
               </div>
             </div>
 

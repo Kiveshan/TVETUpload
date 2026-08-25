@@ -45,9 +45,10 @@ router.get(
 router.get(
   '/download-folder',
   asyncHandler(async (req, res) => {
-    const { provider, collegeName } = req.query as {
+    const { provider, collegeName, year } = req.query as {
       provider?: string;
       collegeName?: string;
+      year?: string;
     };
     if (!provider || !collegeName) {
       throw new HttpError(400, 'provider and collegeName are required');
@@ -61,12 +62,22 @@ router.get(
       throw new HttpError(404, 'No files found for this college');
     }
 
-    const safeName = `${provider}_${collegeName}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+    // Filter by year when specified
+    const filesToZip = year
+      ? college.files.filter((f) => f.year === year)
+      : college.files;
+
+    if (filesToZip.length === 0) {
+      throw new HttpError(404, `No files found for ${collegeName} in ${year}`);
+    }
+
+    const nameParts = [provider, collegeName, year].filter(Boolean);
+    const safeName = nameParts.join('_').replace(/[^a-zA-Z0-9_-]/g, '_');
 
     const zip = new JSZip();
-    for (const file of college.files) {
+    for (const file of filesToZip) {
       const buffer = await downloadFromS3(file.s3Key);
-      zip.file(`${file.folder}/${file.fileName}`, buffer);
+      zip.file(`${file.year ?? ''}/${file.folder}/${file.fileName}`, buffer);
     }
 
     const content = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });

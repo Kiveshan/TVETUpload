@@ -28,6 +28,7 @@ export interface UploadFile {
   label: string;
   fileName: string;
   s3Key: string;
+  year: string;
   createdAt: string;
   reuploadsCount: number;
 }
@@ -168,8 +169,12 @@ export async function getProvidersWithColleges(): Promise<Provider[]> {
     }
 
     const parts = row.s3_bucket_link.split('/');
-    const folder = parts[2] ?? '';
-    const fileName = parts[3] ?? row.s3_bucket_link;
+    // New key format: provider/college/year/folder/filename (parts[2] is a 4-digit year)
+    // Old key format: provider/college/folder/filename — treat as 2025
+    const hasYear = /^\d{4}$/.test(parts[2] ?? '');
+    const year     = hasYear ? (parts[2] ?? '2025') : '2025';
+    const folder   = hasYear ? (parts[3] ?? '') : (parts[2] ?? '');
+    const fileName = hasYear ? (parts[4] ?? row.s3_bucket_link) : (parts[3] ?? row.s3_bucket_link);
 
     college.files.push({
       uploadId: row.upload_id,
@@ -177,6 +182,7 @@ export async function getProvidersWithColleges(): Promise<Provider[]> {
       label: FOLDER_LABELS[folder] ?? folder,
       fileName,
       s3Key: row.s3_bucket_link,
+      year,
       createdAt: row.created_at.toISOString(),
       reuploadsCount: row.reupload_count,
     });

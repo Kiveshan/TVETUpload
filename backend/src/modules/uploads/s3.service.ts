@@ -58,10 +58,11 @@ export function resolveContentType(filename: string): string {
 export function buildKey(
   providerName: string,
   collegeName: string,
+  year: number,
   folder: string,
   filename: string,
 ): string {
-  return `${sanitize(providerName)}/${sanitize(collegeName)}/${folder}/${sanitize(filename)}`;
+  return `${sanitize(providerName)}/${sanitize(collegeName)}/${year}/${folder}/${sanitize(filename)}`;
 }
 
 export async function uploadToS3(

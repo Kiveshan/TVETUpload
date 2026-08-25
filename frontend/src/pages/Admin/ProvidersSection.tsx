@@ -44,16 +44,18 @@ function ProviderTile({
 interface ModalState { college: ProviderCollege; year: Year; }
 
 function YearCollegePanel({
-  year, colleges, onView,
+  year, colleges, search, onView,
 }: {
   year: Year;
   colleges: ProviderCollege[];
+  search: string;
   onView: (college: ProviderCollege, year: Year) => void;
 }) {
-  // Colleges that have at least one file for this year
+  const q = search.toLowerCase();
   const yearColleges = colleges
     .map((c) => ({ ...c, files: c.files.filter((f) => f.year === year) }))
-    .filter((c) => c.files.length > 0);
+    .filter((c) => c.files.length > 0)
+    .filter((c) => !q || c.collegeName.toLowerCase().includes(q));
 
   return (
     <div className="yearPanel">
@@ -63,50 +65,55 @@ function YearCollegePanel({
           {yearColleges.length} college{yearColleges.length !== 1 ? 's' : ''}
         </span>
       </div>
-      {yearColleges.length === 0 ? (
-        <div className="yearPanel__empty">No submissions for {year}</div>
-      ) : (
-        <table className="collegeTable">
-          <thead>
-            <tr>
-              <th>College</th>
-              <th>Progress</th>
-              <th>Files</th>
-              <th>Last Submission</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {yearColleges.map((college) => {
-              const collegePct = pct(college.files.length, TOTAL_FOLDERS);
-              return (
-                <tr key={college.collegeId}>
-                  <td className="td--collegeName">{college.collegeName}</td>
-                  <td>
-                    <div className="inlineProgress">
-                      <ProgressBar value={collegePct} color={barColor(collegePct)} />
-                      <span>{college.files.length} of {TOTAL_FOLDERS}</span>
-                    </div>
-                  </td>
-                  <td>{college.files.length}</td>
-                  <td>{lastSubmission(college.files)}</td>
-                  <td>
-                    <button className="viewLink" onClick={() => onView(college, year)}>
-                      View files <IconChevronRight />
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
+      <div className="yearPanel__scroll">
+        {yearColleges.length === 0 ? (
+          <div className="yearPanel__empty">
+            {q ? `No results for "${search}" in ${year}` : `No submissions for ${year}`}
+          </div>
+        ) : (
+          <table className="collegeTable">
+            <thead>
+              <tr>
+                <th>College</th>
+                <th>Progress</th>
+                <th>Files</th>
+                <th>Last Submission</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {yearColleges.map((college) => {
+                const collegePct = pct(college.files.length, TOTAL_FOLDERS);
+                return (
+                  <tr key={college.collegeId}>
+                    <td className="td--collegeName">{college.collegeName}</td>
+                    <td>
+                      <div className="inlineProgress">
+                        <ProgressBar value={collegePct} color={barColor(collegePct)} />
+                        <span>{college.files.length} of {TOTAL_FOLDERS}</span>
+                      </div>
+                    </td>
+                    <td>{college.files.length}</td>
+                    <td>{lastSubmission(college.files)}</td>
+                    <td>
+                      <button className="viewLink" onClick={() => onView(college, year)}>
+                        View files <IconChevronRight />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }
 
 function ProviderYearSplit({ provider }: { provider: Provider }) {
   const [modal, setModal] = useState<ModalState | null>(null);
+  const [search, setSearch] = useState('');
 
   if (provider.colleges.length === 0) {
     return (
@@ -120,12 +127,27 @@ function ProviderYearSplit({ provider }: { provider: Provider }) {
 
   return (
     <div className="providerDetail">
+      <div className="yearSplitSearch">
+        <input
+          className="yearSplitSearch__input"
+          type="text"
+          placeholder="Search colleges…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        {search && (
+          <button className="yearSplitSearch__clear" onClick={() => setSearch('')} aria-label="Clear search">
+            ×
+          </button>
+        )}
+      </div>
       <div className="yearSplitRow">
         {YEARS.map((year) => (
           <YearCollegePanel
             key={year}
             year={year}
             colleges={provider.colleges}
+            search={search}
             onView={(college, y) => setModal({ college, year: y })}
           />
         ))}

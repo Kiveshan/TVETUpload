@@ -53,11 +53,11 @@ export default function StatsCards({
           <span className="statCard__val statCard__val--green">{stats.collegesUploaded}</span>
           <span className="statCard__icon statCard__icon--green"><IconCheck /></span>
         </div>
-        <div className="statCard__yearRow">
-          <span className="statCard__yearPill statCard__yearPill--green">2025: {stats.collegesUploaded2025}</span>
-          <span className="statCard__yearPill statCard__yearPill--blue">2026: {stats.collegesUploaded2026}</span>
-        </div>
-        <ProgressBar value={uploadedPct} color="#16a34a" />
+        {yearBreakdown ? (
+          <YearPills y2025={yearBreakdown.collegesUploaded['2025']} y2026={yearBreakdown.collegesUploaded['2026']} variant="blue" />
+        ) : (
+          <ProgressBar value={uploadedPct} color="#16a34a" />
+        )}
       </div>
 
       <div className="statCard">
@@ -66,10 +66,9 @@ export default function StatsCards({
           <span className="statCard__val statCard__val--red">{stats.collegesNeverUploaded}</span>
           <span className="statCard__icon statCard__icon--red"><IconAlert /></span>
         </div>
-        <div className="statCard__yearRow">
-          <span className="statCard__yearPill statCard__yearPill--red">2025: {stats.neverUploadedColleges2025.length}</span>
-          <span className="statCard__yearPill statCard__yearPill--red">2026: {stats.neverUploadedColleges2026.length}</span>
-        </div>
+        {yearBreakdown && (
+          <YearPills y2025={yearBreakdown.collegesNeverUploaded['2025']} y2026={yearBreakdown.collegesNeverUploaded['2026']} variant="red" />
+        )}
       </div>
 
       <div className="statCard">
@@ -79,11 +78,7 @@ export default function StatsCards({
           <span className="statCard__icon statCard__icon--blue"><IconFile /></span>
         </div>
         {yearBreakdown ? (
-          <YearPills
-            y2025={yearBreakdown.totalFiles['2025']}
-            y2026={yearBreakdown.totalFiles['2026']}
-            variant="blue"
-          />
+          <YearPills y2025={yearBreakdown.totalFiles['2025']} y2026={yearBreakdown.totalFiles['2026']} variant="blue" />
         ) : (
           <span className="statCard__sub">{stats.totalReuploads} re-uploads</span>
         )}

@@ -4,7 +4,6 @@ import { getProviderForCollege } from './adminProviderMap';
 import type { YearFilter } from './adminTypes';
 
 interface College { college_id: number; college_name: string; }
-type YearFilter = '2025' | '2026';
 
 interface Props {
   colleges: College[];
@@ -44,11 +43,6 @@ export default function AttentionColleges({ colleges2025, colleges2026 }: Props)
   }, [activeList, search]);
 
   const totalFiltered = Object.values(grouped).reduce((s, arr) => s + arr.length, 0);
-
-  const subtitle =
-    yearFilter === 'both'
-      ? `${colleges.length} college${colleges.length !== 1 ? 's' : ''} have never uploaded any documents`
-      : `${colleges.length} college${colleges.length !== 1 ? 's' : ''} have not uploaded for ${yearFilter}`;
 
   return (
     <div className="adminSection">

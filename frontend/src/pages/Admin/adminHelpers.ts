@@ -84,15 +84,6 @@ export async function exportPDF(
   neverUploaded: { college_id: number; college_name: string }[] = [],
   year?: string,
 ) {
-  // Filter files by year if specified
-  const filteredProviders: Provider[] = year
-    ? providers.map((p) => ({
-        ...p,
-        colleges: p.colleges
-          .map((c) => ({ ...c, files: c.files.filter((f) => f.year === year) }))
-          .filter((c) => c.files.length > 0),
-      }))
-    : providers;
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
@@ -153,7 +144,7 @@ export async function exportPDF(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(...textMid);
-  const yearLabel = yearFilter === 'both' ? '2025 & 2026' : yearFilter;
+  const yearLabel = year ?? 'All Years';
   doc.text(`Downloaded on: ${timestamp}  ·  Year: ${yearLabel}`, margin, y);
   y += 10;
 
@@ -174,11 +165,9 @@ export async function exportPDF(
     y += rowH + 1;
   };
 
-  drawTableHeader();
-
-  let rowIndex = 0;
-
-  providers.forEach((p) => {
+  const renderProviderRows = (providerList: Provider[]) => {
+    let rowIndex = 0;
+    providerList.forEach((p) => {
     const uploadedCount = p.colleges.filter((c) => c.files.length > 0).length;
 
     // Page break check
@@ -349,18 +338,11 @@ export async function exportPDF(
   };
 
   // ── Render provider/college table(s) ──
-  if (yearFilter === 'both') {
-    drawYearBanner('2025');
-    drawTableHeader();
-    renderProviderRows(filterByYear('2025'));
-    doc.addPage(); y = 12;
-    drawYearBanner('2026');
-    drawTableHeader();
-    renderProviderRows(filterByYear('2026'));
-  } else {
-    drawTableHeader();
-    renderProviderRows(providers);
-  }
+  const yearProviders: Provider[] = year
+    ? filterByYear(year as '2025' | '2026')
+    : providers;
+  drawTableHeader();
+  renderProviderRows(yearProviders);
 
   // ── Attention section ──
   doc.addPage(); y = 16;
@@ -375,13 +357,7 @@ export async function exportPDF(
   doc.setLineWidth(0.2);
   y += 10;
 
-  if (yearFilter === 'both') {
-    drawAttentionList(neverForYear('2025'), 'Not Uploaded for 2025');
-    if (y + 30 > pageH - 18) { doc.addPage(); y = 16; }
-    drawAttentionList(neverForYear('2026'), 'Not Uploaded for 2026');
-  } else {
-    drawAttentionList(neverUploaded, `Not Uploaded for ${yearFilter}`);
-  }
+  drawAttentionList(neverUploaded, year ? `Not Uploaded for ${year}` : 'Never Uploaded');
 
   // ── Footer on every page ──
   const totalPages: number = (doc.internal as unknown as { pages: unknown[] }).pages.length - 1;

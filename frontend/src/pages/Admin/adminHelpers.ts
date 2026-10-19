@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import { BASE, MANDATORY_FOLDERS } from './adminTypes';
 import { PROVIDER_COLLEGE_MAP, PROVIDER_TOTALS } from './adminProviderMap';
-import type { UploadFile, Provider, YearFilter } from './adminTypes';
+import type { UploadFile, Provider } from './adminTypes';
 
 export function pct(uploaded: number, total: number) {
   return total === 0 ? 0 : Math.round((uploaded / total) * 100);
@@ -223,18 +223,6 @@ export async function exportPDF(
     });
   };
 
-  // Helper: draw year section heading banner
-  const drawYearBanner = (yr: string) => {
-    const bannerBg: [number, number, number] = [30, 58, 95];
-    doc.setFillColor(...bannerBg);
-    doc.rect(margin, y, contentW, 9, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.setTextColor(...white);
-    doc.text(`${yr} Submissions`, margin + 3, y + 6.5);
-    y += 11;
-  };
-
   // Helper: draw never-uploaded attention section
   const dirCollegeX = margin + 6;
   const dirRowH = 7.5;
@@ -316,26 +304,6 @@ export async function exportPDF(
         .map((c) => ({ ...c, files: c.files.filter((f) => f.year === yr) }))
         .filter((c) => c.files.length > 0),
     }));
-
-  // ── Helper: compute never-uploaded list for a specific year ──
-  const neverForYear = (yr: '2025' | '2026') => {
-    const uploadedIds = new Set<number>();
-    for (const p of providers) {
-      for (const c of p.colleges) {
-        if (c.files.some((f) => f.year === yr)) uploadedIds.add(c.collegeId);
-      }
-    }
-    const result: { college_id: number; college_name: string }[] = [...neverUploaded];
-    for (const p of providers) {
-      for (const c of p.colleges) {
-        if (!uploadedIds.has(c.collegeId)) {
-          result.push({ college_id: c.collegeId, college_name: c.collegeName });
-        }
-      }
-    }
-    result.sort((a, b) => a.college_name.localeCompare(b.college_name));
-    return result;
-  };
 
   // ── Render provider/college table(s) ──
   const yearProviders: Provider[] = year

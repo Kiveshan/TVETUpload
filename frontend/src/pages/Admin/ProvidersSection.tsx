@@ -134,8 +134,6 @@ function ProviderDetail({ provider, yearFilter }: { provider: Provider; yearFilt
     );
   }
 
-  const yearsToShow: Year[] = yearFilter === 'both' ? ['2025', '2026'] : [yearFilter];
-
   return (
     <div className="providerDetail">
       <div className="yearSplitSearch">

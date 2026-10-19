@@ -177,11 +177,11 @@ export default function Admin() {
         ) : filteredStats ? (
           <>
             <StatsCards stats={filteredStats!} onTotalClick={() => setShowDirectory(true)} yearBreakdown={yearBreakdown} />
-            {(stats.neverUploadedColleges2025.length > 0 || stats.neverUploadedColleges2026.length > 0) && (
+            {((stats?.neverUploadedColleges2025.length ?? 0) > 0 || (stats?.neverUploadedColleges2026.length ?? 0) > 0) && (
               <AttentionColleges
                 colleges={[]}
-                colleges2025={stats.neverUploadedColleges2025}
-                colleges2026={stats.neverUploadedColleges2026}
+                colleges2025={stats?.neverUploadedColleges2025 ?? []}
+                colleges2026={stats?.neverUploadedColleges2026 ?? []}
               />
             )}
             <ProvidersSection providers={providers} yearFilter={yearFilter} />

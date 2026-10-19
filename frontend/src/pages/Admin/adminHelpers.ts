@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import { BASE, MANDATORY_FOLDERS } from './adminTypes';
 import { PROVIDER_COLLEGE_MAP, PROVIDER_TOTALS } from './adminProviderMap';
-import type { UploadFile, Provider } from './adminTypes';
+import type { UploadFile, Provider, YearFilter } from './adminTypes';
 
 export function pct(uploaded: number, total: number) {
   return total === 0 ? 0 : Math.round((uploaded / total) * 100);
@@ -82,6 +82,7 @@ async function svgToDataUrl(svgUrl: string, w: number, h: number): Promise<strin
 export async function exportPDF(
   providers: Provider[],
   neverUploaded: { college_id: number; college_name: string }[] = [],
+  yearFilter: YearFilter = 'both',
 ) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
@@ -143,7 +144,8 @@ export async function exportPDF(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(...textMid);
-  doc.text(`Downloaded on: ${timestamp}`, margin, y);
+  const yearLabel = yearFilter === 'both' ? '2025 & 2026' : yearFilter;
+  doc.text(`Downloaded on: ${timestamp}  ·  Year: ${yearLabel}`, margin, y);
   y += 10;
 
   // ── Column setup ──
@@ -151,6 +153,7 @@ export async function exportPDF(
   const colUploaded = pageW - margin;
   const rowH = 8;
 
+  // Helper: draw table header row
   const drawTableHeader = () => {
     doc.setFillColor(...navy);
     doc.rect(margin, y, contentW, rowH + 1, 'F');
@@ -162,177 +165,207 @@ export async function exportPDF(
     y += rowH + 1;
   };
 
-  drawTableHeader();
+  // Helper: render provider/college rows for a set of providers
+  const renderProviderRows = (providerList: Provider[]) => {
+    let rowIndex = 0;
+    providerList.forEach((p) => {
+      const uploadedCount = p.colleges.filter((c) => c.files.length > 0).length;
+      if (y + rowH + 2 > pageH - 18) { doc.addPage(); y = 12; drawTableHeader(); }
 
-  let rowIndex = 0;
-
-  providers.forEach((p) => {
-    const uploadedCount = p.colleges.filter((c) => c.files.length > 0).length;
-
-    // Page break check
-    if (y + rowH + 2 > pageH - 18) {
-      doc.addPage();
-      y = 12;
-      drawTableHeader();
-    }
-
-    // ── Provider row ──
-    doc.setFillColor(...providerBg);
-    doc.rect(margin, y, contentW, rowH + 1, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(...navy);
-    doc.text(p.providerName, margin + 3, y + 6);
-    doc.setFontSize(8);
-    doc.setTextColor(...navyLight);
-    const totalForProvider = PROVIDER_TOTALS[p.providerName] ?? p.colleges.length;
-    doc.text(
-      `${uploadedCount} of ${totalForProvider} college${totalForProvider !== 1 ? 's' : ''} uploaded`,
-      colUploaded - 3, y + 6, { align: 'right' },
-    );
-    doc.setDrawColor(200, 218, 240);
-    doc.line(margin, y + rowH + 1, margin + contentW, y + rowH + 1);
-    y += rowH + 1;
-
-    // ── College rows ──
-    p.colleges.forEach((c) => {
-      if (y + rowH > pageH - 18) {
-        doc.addPage();
-        y = 12;
-        drawTableHeader();
-      }
-
-      const hasUploaded = c.files.length > 0;
-      if (rowIndex % 2 === 1) {
-        doc.setFillColor(...rowAlt);
-        doc.rect(margin, y, contentW, rowH, 'F');
-      }
-
-      doc.setFont('helvetica', 'normal');
+      doc.setFillColor(...providerBg);
+      doc.rect(margin, y, contentW, rowH + 1, 'F');
+      doc.setFont('helvetica', 'bold');
       doc.setFontSize(9);
-      doc.setTextColor(...textDark);
-      doc.text(c.collegeName, colCollegeName, y + 5.5);
+      doc.setTextColor(...navy);
+      doc.text(p.providerName, margin + 3, y + 6);
+      doc.setFontSize(8);
+      doc.setTextColor(...navyLight);
+      const totalForProvider = PROVIDER_TOTALS[p.providerName] ?? p.colleges.length;
+      doc.text(
+        `${uploadedCount} of ${totalForProvider} college${totalForProvider !== 1 ? 's' : ''} uploaded`,
+        colUploaded - 3, y + 6, { align: 'right' },
+      );
+      doc.setDrawColor(200, 218, 240);
+      doc.line(margin, y + rowH + 1, margin + contentW, y + rowH + 1);
+      y += rowH + 1;
 
-      // Status pill
-      if (hasUploaded) {
-        const label = `${c.files.length} file${c.files.length !== 1 ? 's' : ''} uploaded`;
-        const pillW = 38;
-        const pillH = 5;
-        const pillX = colUploaded - pillW - 3;
-        const pillY = y + 1.5;
-        doc.setFillColor(220, 252, 231); // light green bg
-        doc.roundedRect(pillX, pillY, pillW, pillH, 1.5, 1.5, 'F');
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(7.5);
-        doc.setTextColor(...green);
-        doc.text(label, pillX + pillW / 2, pillY + 3.5, { align: 'center' });
-      } else {
-        const label = 'No files submitted';
-        const pillW = 38;
-        const pillH = 5;
-        const pillX = colUploaded - pillW - 3;
-        const pillY = y + 1.5;
-        doc.setFillColor(241, 245, 249); // light grey bg
-        doc.roundedRect(pillX, pillY, pillW, pillH, 1.5, 1.5, 'F');
+      p.colleges.forEach((c) => {
+        if (y + rowH > pageH - 18) { doc.addPage(); y = 12; drawTableHeader(); }
+        const hasUploaded = c.files.length > 0;
+        if (rowIndex % 2 === 1) { doc.setFillColor(...rowAlt); doc.rect(margin, y, contentW, rowH, 'F'); }
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(7.5);
-        doc.setTextColor(...gray);
-        doc.text(label, pillX + pillW / 2, pillY + 3.5, { align: 'center' });
-      }
-
-      doc.setDrawColor(226, 232, 240);
-      doc.line(margin, y + rowH, margin + contentW, y + rowH);
-      y += rowH;
-      rowIndex++;
+        doc.setFontSize(9);
+        doc.setTextColor(...textDark);
+        doc.text(c.collegeName, colCollegeName, y + 5.5);
+        const pillLabel = hasUploaded ? `${c.files.length} file${c.files.length !== 1 ? 's' : ''} uploaded` : 'No files submitted';
+        const pillW = 38; const pillH = 5;
+        const pillX = colUploaded - pillW - 3; const pillY = y + 1.5;
+        if (hasUploaded) {
+          doc.setFillColor(220, 252, 231);
+          doc.roundedRect(pillX, pillY, pillW, pillH, 1.5, 1.5, 'F');
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(...green);
+        } else {
+          doc.setFillColor(241, 245, 249);
+          doc.roundedRect(pillX, pillY, pillW, pillH, 1.5, 1.5, 'F');
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...gray);
+        }
+        doc.text(pillLabel, pillX + pillW / 2, pillY + 3.5, { align: 'center' });
+        doc.setDrawColor(226, 232, 240);
+        doc.line(margin, y + rowH, margin + contentW, y + rowH);
+        y += rowH; rowIndex++;
+      });
+      y += 2;
     });
+  };
 
-    y += 2; // gap between providers
-  });
+  // Helper: draw year section heading banner
+  const drawYearBanner = (yr: string) => {
+    const bannerBg: [number, number, number] = [30, 58, 95];
+    doc.setFillColor(...bannerBg);
+    doc.rect(margin, y, contentW, 9, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(...white);
+    doc.text(`${yr} Submissions`, margin + 3, y + 6.5);
+    y += 11;
+  };
 
-  // ── Page 2: Colleges that have never uploaded, grouped by provider ──
-  doc.addPage();
-  let dy = 16;
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
-  doc.setTextColor(...textDark);
-  doc.text('Colleges Requiring Attention', margin, dy);
-  dy += 5;
-  doc.setDrawColor(...navy);
-  doc.setLineWidth(0.5);
-  doc.line(margin, dy, margin + contentW, dy);
-  doc.setLineWidth(0.2);
-  dy += 4;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(...textMid);
-  doc.text(`${neverUploaded.length} college${neverUploaded.length !== 1 ? 's' : ''} have never submitted any documents.`, margin, dy + 4);
-  dy += 10;
-
-  // Group never-uploaded colleges by provider
-  const grouped: Record<string, string[]> = {};
-  const unmatched: string[] = [];
-  for (const c of neverUploaded) {
-    let matched = false;
-    for (const [providerName, colleges] of Object.entries(PROVIDER_COLLEGE_MAP)) {
-      const lower = c.college_name.toLowerCase().trim();
-      if (colleges.some((m) => {
-        const exact = m.toLowerCase() === lower;
-        const keyword = m.toLowerCase().replace(' tvet college', '').replace(' tvet', '').trim();
-        return exact || lower.includes(keyword);
-      })) {
-        if (!grouped[providerName]) grouped[providerName] = [];
-        grouped[providerName].push(c.college_name);
-        matched = true;
-        break;
-      }
-    }
-    if (!matched) unmatched.push(c.college_name);
-  }
-  if (unmatched.length) grouped['Other'] = unmatched;
-
+  // Helper: draw never-uploaded attention section
   const dirCollegeX = margin + 6;
   const dirRowH = 7.5;
   const redMid: [number, number, number] = [220, 38, 38];
 
-  Object.entries(grouped).forEach(([providerName, collegeList]) => {
-    if (dy + dirRowH * 2 > pageH - 18) { doc.addPage(); dy = 16; }
-
-    // Provider heading row
-    doc.setFillColor(...providerBg);
-    doc.rect(margin, dy, contentW, dirRowH, 'F');
+  const drawAttentionList = (list: { college_id: number; college_name: string }[], sectionLabel: string) => {
+    let dy2 = y;
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(...navy);
-    doc.text(providerName, margin + 3, dy + 5.3);
-    doc.setFontSize(8);
-    doc.setTextColor(...redMid);
-    doc.text(
-      `${collegeList.length} not uploaded`,
-      pageW - margin - 3, dy + 5.3, { align: 'right' },
-    );
-    doc.setDrawColor(200, 218, 240);
-    doc.line(margin, dy + dirRowH, margin + contentW, dy + dirRowH);
-    dy += dirRowH;
+    doc.setFontSize(11);
+    doc.setTextColor(...textDark);
+    doc.text(sectionLabel, margin, dy2);
+    dy2 += 4;
+    doc.setDrawColor(...navy);
+    doc.setLineWidth(0.4);
+    doc.line(margin, dy2, margin + contentW, dy2);
+    doc.setLineWidth(0.2);
+    dy2 += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...textMid);
+    const subtitle = list.length === 0
+      ? 'All colleges have submitted for this year.'
+      : `${list.length} college${list.length !== 1 ? 's' : ''} have not submitted for this year.`;
+    doc.text(subtitle, margin, dy2);
+    dy2 += 8;
 
-    collegeList.forEach((name, ci) => {
-      if (dy + dirRowH > pageH - 18) { doc.addPage(); dy = 16; }
-      if (ci % 2 === 1) {
-        doc.setFillColor(...rowAlt);
-        doc.rect(margin, dy, contentW, dirRowH, 'F');
+    if (list.length > 0) {
+      const grouped2: Record<string, string[]> = {};
+      const unmatched2: string[] = [];
+      for (const c of list) {
+        let matched = false;
+        for (const [providerName, colleges] of Object.entries(PROVIDER_COLLEGE_MAP)) {
+          const lower = c.college_name.toLowerCase().trim();
+          if (colleges.some((m) => {
+            const exact = m.toLowerCase() === lower;
+            const keyword = m.toLowerCase().replace(' tvet college', '').replace(' tvet', '').trim();
+            return exact || lower.includes(keyword);
+          })) {
+            if (!grouped2[providerName]) grouped2[providerName] = [];
+            grouped2[providerName].push(c.college_name);
+            matched = true; break;
+          }
+        }
+        if (!matched) unmatched2.push(c.college_name);
       }
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8.5);
-      doc.setTextColor(...textDark);
-      doc.text(name, dirCollegeX, dy + 5.3);
+      if (unmatched2.length) grouped2['Other'] = unmatched2;
 
-      doc.setDrawColor(226, 232, 240);
-      doc.line(margin, dy + dirRowH, margin + contentW, dy + dirRowH);
-      dy += dirRowH;
-    });
+      Object.entries(grouped2).forEach(([providerName, collegeList]) => {
+        if (dy2 + dirRowH * 2 > pageH - 18) { doc.addPage(); dy2 = 16; }
+        doc.setFillColor(...providerBg);
+        doc.rect(margin, dy2, contentW, dirRowH, 'F');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...navy);
+        doc.text(providerName, margin + 3, dy2 + 5.3);
+        doc.setFontSize(8); doc.setTextColor(...redMid);
+        doc.text(`${collegeList.length} not uploaded`, pageW - margin - 3, dy2 + 5.3, { align: 'right' });
+        doc.setDrawColor(200, 218, 240);
+        doc.line(margin, dy2 + dirRowH, margin + contentW, dy2 + dirRowH);
+        dy2 += dirRowH;
+        collegeList.forEach((name, ci) => {
+          if (dy2 + dirRowH > pageH - 18) { doc.addPage(); dy2 = 16; }
+          if (ci % 2 === 1) { doc.setFillColor(...rowAlt); doc.rect(margin, dy2, contentW, dirRowH, 'F'); }
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...textDark);
+          doc.text(name, dirCollegeX, dy2 + 5.3);
+          doc.setDrawColor(226, 232, 240);
+          doc.line(margin, dy2 + dirRowH, margin + contentW, dy2 + dirRowH);
+          dy2 += dirRowH;
+        });
+        dy2 += 3;
+      });
+    }
+    y = dy2 + 4;
+  };
 
-    dy += 3;
-  });
+  // ── Helper: filter providers to a specific year ──
+  const filterByYear = (yr: '2025' | '2026') =>
+    providers.map((p) => ({
+      ...p,
+      colleges: p.colleges
+        .map((c) => ({ ...c, files: c.files.filter((f) => f.year === yr) }))
+        .filter((c) => c.files.length > 0),
+    }));
+
+  // ── Helper: compute never-uploaded list for a specific year ──
+  const neverForYear = (yr: '2025' | '2026') => {
+    const uploadedIds = new Set<number>();
+    for (const p of providers) {
+      for (const c of p.colleges) {
+        if (c.files.some((f) => f.year === yr)) uploadedIds.add(c.collegeId);
+      }
+    }
+    const result: { college_id: number; college_name: string }[] = [...neverUploaded];
+    for (const p of providers) {
+      for (const c of p.colleges) {
+        if (!uploadedIds.has(c.collegeId)) {
+          result.push({ college_id: c.collegeId, college_name: c.collegeName });
+        }
+      }
+    }
+    result.sort((a, b) => a.college_name.localeCompare(b.college_name));
+    return result;
+  };
+
+  // ── Render provider/college table(s) ──
+  if (yearFilter === 'both') {
+    drawYearBanner('2025');
+    drawTableHeader();
+    renderProviderRows(filterByYear('2025'));
+    doc.addPage(); y = 12;
+    drawYearBanner('2026');
+    drawTableHeader();
+    renderProviderRows(filterByYear('2026'));
+  } else {
+    drawTableHeader();
+    renderProviderRows(providers);
+  }
+
+  // ── Attention section ──
+  doc.addPage(); y = 16;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(...textDark);
+  doc.text('Colleges Requiring Attention', margin, y);
+  y += 5;
+  doc.setDrawColor(...navy);
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, margin + contentW, y);
+  doc.setLineWidth(0.2);
+  y += 10;
+
+  if (yearFilter === 'both') {
+    drawAttentionList(neverForYear('2025'), 'Not Uploaded for 2025');
+    if (y + 30 > pageH - 18) { doc.addPage(); y = 16; }
+    drawAttentionList(neverForYear('2026'), 'Not Uploaded for 2026');
+  } else {
+    drawAttentionList(neverUploaded, `Not Uploaded for ${yearFilter}`);
+  }
 
   // ── Footer on every page ──
   const totalPages: number = (doc.internal as unknown as { pages: unknown[] }).pages.length - 1;

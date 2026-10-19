@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../auth/useAuth';
@@ -10,16 +10,39 @@ import ProvidersSection from './ProvidersSection';
 import CollegeDirectoryModal from './CollegeDirectoryModal';
 import { apiFetch, exportPDF } from './adminHelpers';
 import { IconDownload, IconLogout } from './AdminIcons';
-import type { AdminStats, Provider } from './adminTypes';
+import type { AdminStats, Provider, YearFilter } from './adminTypes';
 import './Admin.css';
 import './AdminDocs.css';
 import './AdminProviders.css';
 import '../../layouts/PortalLayout/PortalLayout.css';
 
+function YearToggle({ value, onChange }: { value: YearFilter; onChange: (y: YearFilter) => void }) {
+  const options: { key: YearFilter; label: string }[] = [
+    { key: '2025', label: '2025' },
+    { key: '2026', label: '2026' },
+    { key: 'both', label: 'Both' },
+  ];
+  return (
+    <div className="yearToggle">
+      {options.map(({ key, label }) => (
+        <button
+          key={key}
+          type="button"
+          className={`yearToggle__btn${value === key ? ' yearToggle__btn--active' : ''}`}
+          onClick={() => onChange(key)}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function Admin() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showDirectory, setShowDirectory] = useState(false);
+  const [yearFilter, setYearFilter] = useState<YearFilter>('2026');
 
   useEffect(() => {
     if (!user) { navigate('/', { replace: true }); return; }
@@ -45,10 +68,70 @@ export default function Admin() {
     navigate('/');
   }
 
-  if (!user || user.role !== 'admin') return null;
-
   const providers = providersData?.providers ?? [];
   const isLoading = statsLoading || providersLoading;
+
+  // Helper: compute stats for a specific year from providers data
+  const computeYearStats = useMemo(() => (year: '2025' | '2026') => {
+    if (!stats) return null;
+    const uploadedIds = new Set<number>();
+    let totalFiles = 0;
+    for (const p of providers) {
+      for (const c of p.colleges) {
+        for (const f of c.files) {
+          if (f.year === year) { uploadedIds.add(c.collegeId); totalFiles++; }
+        }
+      }
+    }
+    const neverForYear: { college_id: number; college_name: string }[] = [
+      ...stats.neverUploadedColleges,
+    ];
+    for (const p of providers) {
+      for (const c of p.colleges) {
+        if (!uploadedIds.has(c.collegeId)) {
+          neverForYear.push({ college_id: c.collegeId, college_name: c.collegeName });
+        }
+      }
+    }
+    neverForYear.sort((a, b) => a.college_name.localeCompare(b.college_name));
+    return {
+      uploadedIds,
+      totalFiles,
+      neverForYear,
+      collegesUploaded: uploadedIds.size,
+      collegesNeverUploaded: stats.totalColleges - uploadedIds.size,
+    };
+  }, [stats, providers]);
+
+  // Filtered stats for single-year views
+  const filteredStats = useMemo(() => {
+    if (!stats) return null;
+    if (yearFilter === 'both') return stats;
+    const yr = computeYearStats(yearFilter);
+    if (!yr) return null;
+    return {
+      ...stats,
+      collegesUploaded: yr.collegesUploaded,
+      collegesNeverUploaded: yr.collegesNeverUploaded,
+      totalFiles: yr.totalFiles,
+      neverUploadedColleges: yr.neverForYear,
+    };
+  }, [stats, yearFilter, computeYearStats]);
+
+  // Per-year breakdowns shown in "Both" mode stat cards
+  const yearBreakdown = useMemo(() => {
+    if (yearFilter !== 'both' || !stats) return undefined;
+    const s2025 = computeYearStats('2025');
+    const s2026 = computeYearStats('2026');
+    if (!s2025 || !s2026) return undefined;
+    return {
+      collegesUploaded:     { '2025': s2025.collegesUploaded,     '2026': s2026.collegesUploaded },
+      collegesNeverUploaded:{ '2025': s2025.collegesNeverUploaded, '2026': s2026.collegesNeverUploaded },
+      totalFiles:           { '2025': s2025.totalFiles,           '2026': s2026.totalFiles },
+    };
+  }, [yearFilter, stats, computeYearStats]);
+
+  if (!user || user.role !== 'admin') return null;
 
   return (
     <div className="adminWrap">
@@ -71,8 +154,9 @@ export default function Admin() {
             <p>Monitor TVET college submissions, identify missing documents and download submitted files.</p>
           </div>
           <div className="adminPageHeader__actions">
+            <YearToggle value={yearFilter} onChange={setYearFilter} />
             {providers.length > 0 && (
-              <button className="btnPrimary" onClick={() => { void exportPDF(providers, stats?.neverUploadedColleges ?? []); }}>
+              <button className="btnPrimary" onClick={() => { void exportPDF(providers, stats?.neverUploadedColleges ?? [], yearFilter); }}>
                 <IconDownload /> Export PDF Summary
               </button>
             )}
@@ -81,13 +165,16 @@ export default function Admin() {
 
         {isLoading ? (
           <div className="adminLoading">Loading dashboard…</div>
-        ) : stats ? (
+        ) : filteredStats ? (
           <>
-            <StatsCards stats={stats} onTotalClick={() => setShowDirectory(true)} />
-            {stats.neverUploadedColleges.length > 0 && (
-              <AttentionColleges colleges={stats.neverUploadedColleges} />
+            <StatsCards stats={filteredStats} onTotalClick={() => setShowDirectory(true)} yearBreakdown={yearBreakdown} />
+            {filteredStats.neverUploadedColleges.length > 0 && (
+              <AttentionColleges
+                colleges={filteredStats.neverUploadedColleges}
+                yearFilter={yearFilter}
+              />
             )}
-            <ProvidersSection providers={providers} />
+            <ProvidersSection providers={providers} yearFilter={yearFilter} />
           </>
         ) : null}
       </main>

@@ -131,6 +131,7 @@ export async function getProvidersWithColleges(): Promise<Provider[]> {
       college_name: string;
       upload_id: number;
       s3_bucket_link: string;
+      upload_year: number;
       created_at: Date;
       reupload_count: number;
     }>(`
@@ -140,6 +141,7 @@ export async function getProvidersWithColleges(): Promise<Provider[]> {
         c.college_name,
         u.upload_id,
         u.s3_bucket_link,
+        u.upload_year,
         u.created_at,
         u.reupload_count
       FROM uploads u
@@ -169,12 +171,11 @@ export async function getProvidersWithColleges(): Promise<Provider[]> {
     }
 
     const parts = row.s3_bucket_link.split('/');
-    // New key format: provider/college/year/folder/filename (parts[2] is a 4-digit year)
-    // Old key format: provider/college/folder/filename — treat as 2025
-    const hasYear = /^\d{4}$/.test(parts[2] ?? '');
-    const year     = hasYear ? (parts[2] ?? '2025') : '2025';
-    const folder   = hasYear ? (parts[3] ?? '') : (parts[2] ?? '');
-    const fileName = hasYear ? (parts[4] ?? row.s3_bucket_link) : (parts[3] ?? row.s3_bucket_link);
+    // Use the authoritative upload_year column; derive folder/filename from path
+    const year = row.upload_year?.toString() ?? '2025';
+    const hasYearInPath = /^\d{4}$/.test(parts[2] ?? '');
+    const folder   = hasYearInPath ? (parts[3] ?? '') : (parts[2] ?? '');
+    const fileName = hasYearInPath ? (parts[4] ?? row.s3_bucket_link) : (parts[3] ?? row.s3_bucket_link);
 
     college.files.push({
       uploadId: row.upload_id,

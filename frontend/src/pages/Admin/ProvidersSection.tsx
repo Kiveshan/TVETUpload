@@ -5,18 +5,34 @@ import { PROVIDER_TOTALS } from './adminProviderMap';
 import { IconChevronRight } from './AdminIcons';
 import { ProgressBar } from './StatsCards';
 import FileModal from './FileModal';
-import type { Provider, ProviderCollege } from './adminTypes';
+import type { Provider, ProviderCollege, YearFilter } from './adminTypes';
 
 const YEARS = ['2025', '2026'] as const;
 type Year = typeof YEARS[number];
 
 function ProviderTile({
-  provider, selected, onClick,
-}: { provider: Provider; selected: boolean; onClick: () => void }) {
-  const totalFiles = provider.colleges.reduce((s, c) => s + c.files.length, 0);
-  const hasData = provider.colleges.length > 0;
+  provider, selected, onClick, yearFilter,
+}: {
+  provider: Provider;
+  selected: boolean;
+  onClick: () => void;
+  yearFilter: YearFilter;
+}) {
   const totalColleges = PROVIDER_TOTALS[provider.providerName] ?? provider.colleges.length;
-  const uploadedColleges = provider.colleges.length;
+
+  // Count colleges and files for the selected year(s)
+  const uploadedColleges = yearFilter === 'both'
+    ? provider.colleges.length
+    : provider.colleges.filter((c) => c.files.some((f) => f.year === yearFilter)).length;
+
+  const totalFiles = yearFilter === 'both'
+    ? provider.colleges.reduce((s, c) => s + c.files.length, 0)
+    : provider.colleges.reduce(
+        (s, c) => s + c.files.filter((f) => f.year === yearFilter).length,
+        0,
+      );
+
+  const hasData = uploadedColleges > 0;
 
   return (
     <button
@@ -50,7 +66,6 @@ function YearCollegePanel({
   colleges: ProviderCollege[];
   onView: (college: ProviderCollege, year: Year) => void;
 }) {
-  // Colleges that have at least one file for this year
   const yearColleges = colleges
     .map((c) => ({ ...c, files: c.files.filter((f) => f.year === year) }))
     .filter((c) => c.files.length > 0);
@@ -105,23 +120,30 @@ function YearCollegePanel({
   );
 }
 
-function ProviderYearSplit({ provider }: { provider: Provider }) {
+function ProviderDetail({ provider, yearFilter }: { provider: Provider; yearFilter: YearFilter }) {
   const [modal, setModal] = useState<ModalState | null>(null);
 
-  if (provider.colleges.length === 0) {
+  const hasAnyFiles = yearFilter === 'both'
+    ? provider.colleges.length > 0
+    : provider.colleges.some((c) => c.files.some((f) => f.year === yearFilter));
+
+  if (!hasAnyFiles) {
+    const yearLabel = yearFilter === 'both' ? '' : ` for ${yearFilter}`;
     return (
       <div className="providerDetail">
         <div className="adminEmpty">
-          No colleges have submitted files under <strong>{provider.providerName}</strong> yet.
+          No colleges have submitted files under <strong>{provider.providerName}</strong>{yearLabel} yet.
         </div>
       </div>
     );
   }
 
+  const yearsToShow: Year[] = yearFilter === 'both' ? ['2025', '2026'] : [yearFilter];
+
   return (
     <div className="providerDetail">
-      <div className="yearSplitRow">
-        {YEARS.map((year) => (
+      <div className={`yearSplitRow${yearsToShow.length === 1 ? ' yearSplitRow--single' : ''}`}>
+        {yearsToShow.map((year) => (
           <YearCollegePanel
             key={year}
             year={year}
@@ -142,7 +164,13 @@ function ProviderYearSplit({ provider }: { provider: Provider }) {
   );
 }
 
-export default function ProvidersSection({ providers }: { providers: Provider[] }) {
+export default function ProvidersSection({
+  providers,
+  yearFilter,
+}: {
+  providers: Provider[];
+  yearFilter: YearFilter;
+}) {
   const [selected, setSelected] = useState<string | null>(
     providers.find((p) => p.colleges.length > 0)?.providerName ?? null,
   );
@@ -163,11 +191,16 @@ export default function ProvidersSection({ providers }: { providers: Provider[] 
             provider={p}
             selected={selected === p.providerName}
             onClick={() => setSelected(selected === p.providerName ? null : p.providerName)}
+            yearFilter={yearFilter}
           />
         ))}
       </div>
       {selectedProvider && (
-        <ProviderYearSplit key={selectedProvider.providerName} provider={selectedProvider} />
+        <ProviderDetail
+          key={`${selectedProvider.providerName}-${yearFilter}`}
+          provider={selectedProvider}
+          yearFilter={yearFilter}
+        />
       )}
     </div>
   );

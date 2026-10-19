@@ -1,23 +1,31 @@
 import { useState, useMemo } from 'react';
 import { IconAlert, IconChevronDown, IconSearch, IconBuilding } from './AdminIcons';
 import { getProviderForCollege } from './adminProviderMap';
-
-type YearFilter = '2025' | '2026';
+import type { YearFilter } from './adminTypes';
 
 interface College { college_id: number; college_name: string; }
 
 interface Props {
-  colleges: College[];
   colleges2025: College[];
   colleges2026: College[];
+  yearFilter: YearFilter;
 }
 
-export default function AttentionColleges({ colleges2025, colleges2026 }: Props) {
+export default function AttentionColleges({ colleges2025, colleges2026, yearFilter }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [yearFilter, setYearFilter] = useState<YearFilter>('2025');
 
-  const activeList = yearFilter === '2025' ? colleges2025 : colleges2026;
+  const activeList = useMemo(() => {
+    if (yearFilter === '2025') return colleges2025;
+    if (yearFilter === '2026') return colleges2026;
+    // both: union deduped by college_id
+    const seen = new Set<number>();
+    const merged: College[] = [];
+    for (const c of [...colleges2025, ...colleges2026]) {
+      if (!seen.has(c.college_id)) { seen.add(c.college_id); merged.push(c); }
+    }
+    return merged.sort((a, b) => a.college_name.localeCompare(b.college_name));
+  }, [yearFilter, colleges2025, colleges2026]);
 
   const grouped = useMemo(() => {
     const q = search.toLowerCase();
@@ -45,6 +53,8 @@ export default function AttentionColleges({ colleges2025, colleges2026 }: Props)
 
   const totalFiltered = Object.values(grouped).reduce((s, arr) => s + arr.length, 0);
 
+  const yearLabel = yearFilter === 'both' ? 'either year' : yearFilter;
+
   return (
     <div className="adminSection">
       <div className="attentionCard">
@@ -54,22 +64,11 @@ export default function AttentionColleges({ colleges2025, colleges2026 }: Props)
             <div>
               <span className="attentionSummary__title">Colleges Requiring Attention</span>
               <span className="attentionSummary__sub">
-                {activeList.length} college{activeList.length !== 1 ? 's' : ''} have never uploaded for {yearFilter}
+                {activeList.length} college{activeList.length !== 1 ? 's' : ''} have never uploaded for {yearLabel}
               </span>
             </div>
           </div>
           <div className="attentionSummary__right">
-            <div className="attentionYearTabs" onClick={(e) => e.stopPropagation()}>
-              {(['2025', '2026'] as YearFilter[]).map((y) => (
-                <button
-                  key={y}
-                  className={`attentionYearTab${yearFilter === y ? ' attentionYearTab--active' : ''}`}
-                  onClick={() => setYearFilter(y)}
-                >
-                  {y}
-                </button>
-              ))}
-            </div>
             <span className="attentionSummary__count">{activeList.length}</span>
             <span className={`chevron${open ? ' chevron--open' : ''}`}><IconChevronDown /></span>
           </div>

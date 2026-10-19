@@ -8,6 +8,8 @@ import {
   getAvailableCollegeForUser,
   getSubmittedColleges,
   getSubmittedCollegesForUser,
+  getSubmittedYears,
+  getSubmittedYearsForUser,
 } from './colleges.service';
 
 const router = Router();
@@ -54,6 +56,26 @@ router.get(
 
     const colleges = await getSubmittedColleges(user.providerName);
     res.json({ colleges });
+  }),
+);
+
+router.get(
+  '/submitted-years/:collegeId',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const user = res.locals.user;
+    const collegeId = parseInt(String(req.params.collegeId), 10);
+    if (isNaN(collegeId)) throw new HttpError(400, 'Invalid collegeId');
+
+    if (user.role === 'college' && user.collegeId !== collegeId) {
+      throw new HttpError(403, 'Not authorized');
+    }
+
+    const years = user.role === 'college'
+      ? await getSubmittedYearsForUser(collegeId)
+      : await getSubmittedYears(user.providerName, collegeId);
+
+    res.json({ years });
   }),
 );
 

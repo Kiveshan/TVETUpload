@@ -148,6 +148,22 @@
 .statCard__sub--red  { color: #dc2626; }
 .statCard__sub--link { color: #1d4ed8; font-weight: 600; }
 
+.statCard__yearRow {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0.1rem;
+}
+.statCard__yearPill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+  border-radius: 99px;
+}
+.statCard__yearPill--green { background: #dcfce7; color: #15803d; }
+.statCard__yearPill--blue  { background: #dbeafe; color: #1d4ed8; }
+.statCard__yearPill--red   { background: #fee2e2; color: #dc2626; }
+
 .statCard--clickable {
   cursor: pointer;
   text-align: left;

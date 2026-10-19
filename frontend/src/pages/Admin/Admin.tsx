@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../auth/useAuth';
@@ -10,40 +10,25 @@ import ProvidersSection from './ProvidersSection';
 import CollegeDirectoryModal from './CollegeDirectoryModal';
 import { apiFetch, exportPDF } from './adminHelpers';
 import { IconDownload, IconLogout } from './AdminIcons';
-import type { AdminStats, Provider } from './adminTypes';
+import type { AdminStats, Provider, YearFilter } from './adminTypes';
 import './Admin.css';
 import './AdminDocs.css';
 import './AdminProviders.css';
 import '../../layouts/PortalLayout/PortalLayout.css';
 
-type PdfYear = '2025' | '2026' | 'both';
 
-function PdfYearModal({ onClose, onExport }: { onClose: () => void; onExport: (year: PdfYear) => void }) {
+function YearToggle({ value, onChange }: { value: YearFilter; onChange: (v: YearFilter) => void }) {
   return (
-    <div className="modalOverlay" onClick={onClose}>
-      <div className="modalBox" style={{ maxWidth: 380 }} onClick={(e) => e.stopPropagation()}>
-        <div className="modalBox__header">
-          <div>
-            <p className="modalBox__title">Export PDF Summary</p>
-            <p className="modalBox__subtitle">Choose which year(s) to include</p>
-          </div>
-        </div>
-        <div className="modalBox__body" style={{ padding: '1rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-          {(['2025', '2026', 'both'] as PdfYear[]).map((y) => (
-            <button
-              key={y}
-              className="pdfYearOption"
-              onClick={() => { onExport(y); onClose(); }}
-            >
-              <IconDownload />
-              {y === 'both' ? 'Both years (2025 & 2026)' : `${y} only`}
-            </button>
-          ))}
-        </div>
-        <div className="modalBox__footer">
-          <button className="btnOutline" onClick={onClose}>Cancel</button>
-        </div>
-      </div>
+    <div className="yearToggle">
+      {(['2025', '2026', 'both'] as YearFilter[]).map((v) => (
+        <button
+          key={v}
+          className={`yearToggle__btn${value === v ? ' yearToggle__btn--active' : ''}`}
+          onClick={() => onChange(v)}
+        >
+          {v === 'both' ? 'Both' : v}
+        </button>
+      ))}
     </div>
   );
 }
@@ -52,7 +37,7 @@ export default function Admin() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showDirectory, setShowDirectory] = useState(false);
-  const [showPdfModal, setShowPdfModal] = useState(false);
+  const [yearFilter, setYearFilter] = useState<YearFilter>('2026');
 
   useEffect(() => {
     if (!user) { navigate('/', { replace: true }); return; }
@@ -78,24 +63,84 @@ export default function Admin() {
     navigate('/');
   }
 
-  async function handleExport(year: PdfYear) {
-    const providers = providersData?.providers ?? [];
-    if (year === 'both') {
-      await exportPDF(providers, stats?.neverUploadedColleges2025 ?? [], '2025');
+  async function handleExport() {
+    const providerList = providersData?.providers ?? [];
+    if (yearFilter === 'both') {
+      await exportPDF(providerList, stats?.neverUploadedColleges2025 ?? [], '2025');
       await new Promise<void>((r) => setTimeout(r, 600));
-      await exportPDF(providers, stats?.neverUploadedColleges2026 ?? [], '2026');
+      await exportPDF(providerList, stats?.neverUploadedColleges2026 ?? [], '2026');
     } else {
-      const neverUploaded = year === '2025'
+      const neverUploaded = yearFilter === '2025'
         ? (stats?.neverUploadedColleges2025 ?? [])
         : (stats?.neverUploadedColleges2026 ?? []);
-      void exportPDF(providers, neverUploaded, year);
+      void exportPDF(providerList, neverUploaded, yearFilter);
     }
   }
 
-  if (!user || user.role !== 'admin') return null;
-
   const providers = providersData?.providers ?? [];
   const isLoading = statsLoading || providersLoading;
+
+  // Helper: compute stats for a specific year from providers data
+  const computeYearStats = useMemo(() => (year: '2025' | '2026') => {
+    if (!stats) return null;
+    const uploadedIds = new Set<number>();
+    let totalFiles = 0;
+    for (const p of providers) {
+      for (const c of p.colleges) {
+        for (const f of c.files) {
+          if (f.year === year) { uploadedIds.add(c.collegeId); totalFiles++; }
+        }
+      }
+    }
+    const neverForYear: { college_id: number; college_name: string }[] = [
+      ...stats.neverUploadedColleges,
+    ];
+    for (const p of providers) {
+      for (const c of p.colleges) {
+        if (!uploadedIds.has(c.collegeId)) {
+          neverForYear.push({ college_id: c.collegeId, college_name: c.collegeName });
+        }
+      }
+    }
+    neverForYear.sort((a, b) => a.college_name.localeCompare(b.college_name));
+    return {
+      uploadedIds,
+      totalFiles,
+      neverForYear,
+      collegesUploaded: uploadedIds.size,
+      collegesNeverUploaded: stats.totalColleges - uploadedIds.size,
+    };
+  }, [stats, providers]);
+
+  // Filtered stats for single-year views
+  const filteredStats = useMemo(() => {
+    if (!stats) return null;
+    if (yearFilter === 'both') return stats;
+    const yr = computeYearStats(yearFilter);
+    if (!yr) return null;
+    return {
+      ...stats,
+      collegesUploaded: yr.collegesUploaded,
+      collegesNeverUploaded: yr.collegesNeverUploaded,
+      totalFiles: yr.totalFiles,
+      neverUploadedColleges: yr.neverForYear,
+    };
+  }, [stats, yearFilter, computeYearStats]);
+
+  // Per-year breakdowns shown in "Both" mode stat cards
+  const yearBreakdown = useMemo(() => {
+    if (yearFilter !== 'both' || !stats) return undefined;
+    const s2025 = computeYearStats('2025');
+    const s2026 = computeYearStats('2026');
+    if (!s2025 || !s2026) return undefined;
+    return {
+      collegesUploaded:     { '2025': s2025.collegesUploaded,     '2026': s2026.collegesUploaded },
+      collegesNeverUploaded:{ '2025': s2025.collegesNeverUploaded, '2026': s2026.collegesNeverUploaded },
+      totalFiles:           { '2025': s2025.totalFiles,           '2026': s2026.totalFiles },
+    };
+  }, [yearFilter, stats, computeYearStats]);
+
+  if (!user || user.role !== 'admin') return null;
 
   return (
     <div className="adminWrap">
@@ -118,8 +163,9 @@ export default function Admin() {
             <p>Monitor TVET college submissions, identify missing documents and download submitted files.</p>
           </div>
           <div className="adminPageHeader__actions">
+            <YearToggle value={yearFilter} onChange={setYearFilter} />
             {providers.length > 0 && (
-              <button className="btnPrimary" onClick={() => setShowPdfModal(true)}>
+              <button className="btnPrimary" onClick={() => void handleExport()}>
                 <IconDownload /> Export PDF Summary
               </button>
             )}
@@ -128,28 +174,22 @@ export default function Admin() {
 
         {isLoading ? (
           <div className="adminLoading">Loading dashboard…</div>
-        ) : stats ? (
+        ) : filteredStats ? (
           <>
-            <StatsCards stats={stats} onTotalClick={() => setShowDirectory(true)} />
-            {(stats.neverUploadedColleges2025.length > 0 || stats.neverUploadedColleges2026.length > 0) && (
+            <StatsCards stats={filteredStats!} onTotalClick={() => setShowDirectory(true)} yearBreakdown={yearBreakdown} />
+            {((stats?.neverUploadedColleges2025.length ?? 0) > 0 || (stats?.neverUploadedColleges2026.length ?? 0) > 0) && (
               <AttentionColleges
                 colleges={[]}
-                colleges2025={stats.neverUploadedColleges2025}
-                colleges2026={stats.neverUploadedColleges2026}
+                colleges2025={stats?.neverUploadedColleges2025 ?? []}
+                colleges2026={stats?.neverUploadedColleges2026 ?? []}
               />
             )}
-            <ProvidersSection providers={providers} />
+            <ProvidersSection providers={providers} yearFilter={yearFilter} />
           </>
         ) : null}
       </main>
       <Footer />
       {showDirectory && <CollegeDirectoryModal onClose={() => setShowDirectory(false)} />}
-      {showPdfModal && (
-        <PdfYearModal
-          onClose={() => setShowPdfModal(false)}
-          onExport={handleExport}
-        />
-      )}
     </div>
   );
 }

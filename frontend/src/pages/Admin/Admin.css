@@ -349,6 +349,58 @@
   color: #94a3b8;
 }
 
+/* ── Year pills (Both-mode stat card breakdowns) ── */
+.statCard__yearPills {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.15rem;
+}
+
+.yearPill {
+  display: inline-block;
+  padding: 0.18rem 0.55rem;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.yearPill--blue {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.yearPill--red {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* ── Universal year toggle ── */
+.yearToggle {
+  display: inline-flex;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.yearToggle__btn {
+  padding: 0.42rem 1.1rem;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  border-right: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.yearToggle__btn:last-child { border-right: none; }
+.yearToggle__btn--active { background: #0047a2; color: #fff; }
+.yearToggle__btn:hover:not(.yearToggle__btn--active) { background: #eff6ff; color: #0047a2; }
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .statsGrid { grid-template-columns: 1fr 1fr; }

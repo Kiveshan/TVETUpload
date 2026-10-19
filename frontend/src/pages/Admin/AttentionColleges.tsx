@@ -2,8 +2,9 @@ import { useState, useMemo } from 'react';
 import { IconAlert, IconChevronDown, IconSearch, IconBuilding } from './AdminIcons';
 import { getProviderForCollege } from './adminProviderMap';
 
-interface College { college_id: number; college_name: string; }
 type YearFilter = '2025' | '2026';
+
+interface College { college_id: number; college_name: string; }
 
 interface Props {
   colleges: College[];

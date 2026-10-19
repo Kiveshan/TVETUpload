@@ -2,6 +2,8 @@ export const MANDATORY_FOLDERS = ['college_information', 'P_S_Q', 'student', 'st
 export const TOTAL_FOLDERS = 5;
 export const BASE = import.meta.env.VITE_API_URL ?? '/api';
 
+export type YearFilter = '2025' | '2026' | 'both';
+
 export interface FileTypeCount {
   folder: string;
   label: string;

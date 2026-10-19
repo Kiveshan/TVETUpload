@@ -143,8 +143,12 @@
   min-height: 120px;
 }
 
+.yearSplitRow--single {
+  grid-template-columns: 1fr;
+}
+
 /* Divider between the two year panels */
-.yearSplitRow > .yearPanel:first-child {
+.yearSplitRow:not(.yearSplitRow--single) > .yearPanel:first-child {
   border-right: 1px solid #e2e8f0;
 }
 
